@@ -26,4 +26,8 @@ public class Lance {
 
     @Column(nullable = false)
     private LocalDateTime dataHora;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario;
 }

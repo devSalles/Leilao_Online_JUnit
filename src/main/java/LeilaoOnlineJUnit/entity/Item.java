@@ -36,4 +36,11 @@ public class Item {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusItem statusItem;
+
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
+    private Usuario usuario = new Usuario();
+
+    @OneToOne
+    private Item item;
 }

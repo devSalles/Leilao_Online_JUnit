@@ -10,6 +10,8 @@ import lombok.Setter;
 import org.hibernate.validator.constraints.br.CPF;
 
 import javax.annotation.processing.Generated;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_usuario")
@@ -35,5 +37,9 @@ public class Usuario {
     @Column(nullable = false) @Enumerated(EnumType.STRING)
     private StatusUsuario statusUsuario;
 
+    @OneToMany(mappedBy = "usuario")
+    private List<Item> itens = new ArrayList<>();
 
+    @OneToMany(mappedBy = "usuario")
+    private  List<Lance> lances = new ArrayList<>();
 }
