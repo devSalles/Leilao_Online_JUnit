@@ -30,4 +30,7 @@ public class Lance {
     @ManyToOne
     @JoinColumn(name = "usuario_id")
     private Usuario usuario;
+
+    @OneToOne(mappedBy = "lance")
+    private Item item;
 }

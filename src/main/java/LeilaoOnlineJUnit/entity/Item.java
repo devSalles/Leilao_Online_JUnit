@@ -42,5 +42,6 @@ public class Item {
     private Usuario usuario = new Usuario();
 
     @OneToOne
-    private Item item;
+    @JoinColumn(name = "lance_id")
+    private Lance lance;
 }
