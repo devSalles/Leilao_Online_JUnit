@@ -42,4 +42,7 @@ public class Usuario {
 
     @OneToMany(mappedBy = "usuario")
     private  List<Lance> lances = new ArrayList<>();
+
+    @OneToMany(mappedBy = "usuario")
+    private List<Leilao> leilao = new ArrayList<>();
 }

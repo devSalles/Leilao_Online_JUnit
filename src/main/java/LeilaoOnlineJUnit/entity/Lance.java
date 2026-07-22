@@ -33,4 +33,8 @@ public class Lance {
 
     @OneToOne(mappedBy = "lance")
     private Item item;
+
+    @ManyToOne
+    @JoinColumn(name = "lance_id",nullable = false)
+    private Leilao leilao;
 }

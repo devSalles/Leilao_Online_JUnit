@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_leilao")
@@ -34,4 +36,10 @@ public class Leilao {
     @JoinColumn(name = "item_id", nullable = false, unique = true)
     private Item item;
 
+    @OneToMany(mappedBy = "leilao")
+    private List<Lance> lance = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "leilao_id", nullable = false)
+    private Usuario usuario;
 }
