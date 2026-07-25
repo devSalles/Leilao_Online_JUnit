@@ -15,7 +15,8 @@ public record UsuarioRequestDTO(
         @NotBlank(message = "Email de participante obrigatório") @Email(message = "Formato de email inválido")
         String email,
 
-        @NotBlank(message = "CPF de participante obrigatório") @CPF(message = "Formato de CPF inválido") @Min(value = 11,message = "Tamanho de CPF inválido")
+        @NotBlank(message = "CPF de participante obrigatório") @CPF(message = "Formato de CPF inválido")
+        @Min(value = 11,message = "Tamanho de CPF inválido")
         String cpf
 ) {
 
