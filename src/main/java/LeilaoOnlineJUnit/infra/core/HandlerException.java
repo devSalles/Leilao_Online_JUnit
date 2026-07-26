@@ -2,6 +2,7 @@ package LeilaoOnlineJUnit.infra.core;
 
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
+import LeilaoOnlineJUnit.infra.exception.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.infra.exception.participante.CpfNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.participante.CpfRepetidoException;
 import LeilaoOnlineJUnit.infra.exception.participante.EmailNaoEncontradoException;
@@ -52,7 +53,15 @@ public class HandlerException {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageRestError);
     }
 
-    //Exceções Usuário
+    @ExceptionHandler(UsuarioBloqueadoException.class)
+    public ResponseEntity<MessageRestError> UsuarioBloqueadoException(UsuarioBloqueadoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
+    }
+
+    // --- Exceções Usuário ---
+
     @ExceptionHandler({
             EmailRepetidoException.class,
             CpfRepetidoException.class
