@@ -8,8 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.validator.constraints.br.CPF;
-
-import javax.annotation.processing.Generated;
 import java.util.ArrayList;
 import java.util.List;
 
