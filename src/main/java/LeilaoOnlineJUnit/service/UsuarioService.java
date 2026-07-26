@@ -1,11 +1,13 @@
 package LeilaoOnlineJUnit.service;
 
+import LeilaoOnlineJUnit.Enum.StatusUsuario;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioRequestDTO;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioResponseDTO;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioUpdateRequestDTO;
 import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
+import LeilaoOnlineJUnit.infra.exception.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.infra.exception.participante.CpfNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.participante.CpfRepetidoException;
 import LeilaoOnlineJUnit.infra.exception.participante.EmailNaoEncontradoException;
@@ -100,6 +102,29 @@ public class UsuarioService {
         return UsuarioResponseDTO.fromUsuario(usuarioEmail);
     }
 
+    public List<UsuarioResponseDTO> exibirPorStatus(StatusUsuario statusUsuario)
+    {
+        List<Usuario> usuarioStatus = usuarioRepository.findByStatusUsuario(statusUsuario);
+        if (usuarioStatus.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro foi encontrado com esse status");
+        }
+        return usuarioStatus.stream().map(UsuarioResponseDTO::fromUsuario).toList();
+    }
+
+    public UsuarioResponseDTO bloquearUsuario(Long idUser)
+    {
+        Usuario usuarioBloqueado = buscarIdUsuario(idUser);
+
+        if(usuarioBloqueado.getStatusUsuario().equals(StatusUsuario.BLOQUEADO))
+        {
+            throw new UsuarioBloqueadoException("Usuario já bloqueado");
+        }
+
+        usuarioBloqueado.setStatusUsuario(StatusUsuario.BLOQUEADO);
+        this.usuarioRepository.save(usuarioBloqueado);
+        return  UsuarioResponseDTO.fromUsuario(usuarioBloqueado);
+    }
 
     // --- METODO AUXILIAR ---
 

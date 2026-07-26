@@ -1,5 +1,6 @@
 package LeilaoOnlineJUnit.controller;
 
+import LeilaoOnlineJUnit.Enum.StatusUsuario;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioRequestDTO;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioResponseDTO;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioUpdateRequestDTO;
@@ -38,6 +39,12 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioResponseDTO);
     }
 
+    @PatchMapping("/bloquear-usuario/{idUser}")
+    public ResponseEntity<UsuarioResponseDTO> bloquearUsuario(@PathVariable Long idUser) {
+        UsuarioResponseDTO usuarioResponseDTO = usuarioService.bloquearUsuario(idUser);
+        return ResponseEntity.ok(usuarioResponseDTO);
+    }
+
     @GetMapping("/exibir-por-id/{idUser}")
     public ResponseEntity<UsuarioResponseDTO> controllerExibirPorId(@PathVariable Long idUser)
     {
@@ -63,6 +70,13 @@ public class UsuarioController {
     public ResponseEntity<UsuarioResponseDTO> controllerExibirPorEmail(@PathVariable String email)
     {
         UsuarioResponseDTO usuarioResponseDTO = usuarioService.exibirPorEmail(email);
+        return ResponseEntity.ok(usuarioResponseDTO);
+    }
+
+    @GetMapping("/exibir-por-status/{statusUsuario}")
+    public ResponseEntity<List<UsuarioResponseDTO>> controllerExibirPorEmail(@PathVariable StatusUsuario statusUsuario)
+    {
+        List<UsuarioResponseDTO> usuarioResponseDTO = usuarioService.exibirPorStatus(statusUsuario);
         return ResponseEntity.ok(usuarioResponseDTO);
     }
 }
