@@ -1,4 +1,4 @@
-package LeilaoOnlineJUnit.infra.exception;
+package LeilaoOnlineJUnit.infra.exception.participante;
 
 public class CpfRepetidoException extends RuntimeException {
     public CpfRepetidoException(String message) {

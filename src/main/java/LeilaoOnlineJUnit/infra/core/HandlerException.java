@@ -1,7 +1,11 @@
 package LeilaoOnlineJUnit.infra.core;
 
-import LeilaoOnlineJUnit.infra.exception.CpfRepetidoException;
-import LeilaoOnlineJUnit.infra.exception.EmailRepetidoException;
+import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
+import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
+import LeilaoOnlineJUnit.infra.exception.participante.CpfNaoEncontradoException;
+import LeilaoOnlineJUnit.infra.exception.participante.CpfRepetidoException;
+import LeilaoOnlineJUnit.infra.exception.participante.EmailNaoEncontradoException;
+import LeilaoOnlineJUnit.infra.exception.participante.EmailRepetidoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,6 +17,8 @@ import java.util.Map;
 
 @ControllerAdvice
 public class HandlerException {
+
+    //Exceções globais
 
 //    @ExceptionHandler(Exception.class)
 //    public ResponseEntity<MessageRestError> ExcecoesGlobais()
@@ -32,16 +38,39 @@ public class HandlerException {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
     }
 
+    @ExceptionHandler(IdNaoEncontradoException.class)
+    public ResponseEntity<MessageRestError> IdNaoEncontradoException(IdNaoEncontradoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.NOT_FOUND,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageRestError);
+    }
 
-    //Excecções Usuário
+    @ExceptionHandler(NenhumRegistroException.class)
+    public ResponseEntity<MessageRestError> NenhumRegistroException(NenhumRegistroException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.NOT_FOUND,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageRestError);
+    }
+
+    //Exceções Usuário
     @ExceptionHandler({
             EmailRepetidoException.class,
             CpfRepetidoException.class
     })
     public ResponseEntity<MessageRestError> excecoesCadastrosRepetidos(Exception ex)
     {
-        MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST, ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
 
+    }
+
+    @ExceptionHandler({
+            CpfNaoEncontradoException.class,
+            EmailNaoEncontradoException.class
+            })
+    public ResponseEntity<MessageRestError> excecoesCpfEEmailNaoEncontrado(Exception ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.NOT_FOUND, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageRestError);
     }
 }
