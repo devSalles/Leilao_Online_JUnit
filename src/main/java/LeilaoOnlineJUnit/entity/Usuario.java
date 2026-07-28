@@ -35,12 +35,12 @@ public class Usuario {
     @Column(nullable = false) @Enumerated(EnumType.STRING)
     private StatusUsuario statusUsuario;
 
-    @OneToMany(mappedBy = "usuario")
+    @OneToMany(mappedBy = "proprietario")
     private List<Item> itens = new ArrayList<>();
 
     @OneToMany(mappedBy = "usuario")
     private  List<Lance> lances = new ArrayList<>();
 
-    @OneToMany(mappedBy = "usuario")
+    @OneToMany(mappedBy = "criador")
     private List<Leilao> leilao = new ArrayList<>();
 }

@@ -18,6 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Leilao {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,10 +37,14 @@ public class Leilao {
     @JoinColumn(name = "item_id", nullable = false, unique = true)
     private Item item;
 
-    @OneToMany(mappedBy = "leilao")
-    private List<Lance> lance = new ArrayList<>();
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "criador_id", nullable = false)
+    private Usuario criador;
 
-    @ManyToOne
-    @JoinColumn(name = "leilao_id", nullable = false)
-    private Usuario usuario;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "vencedor_id")
+    private Usuario vencedor;
+
+    @OneToMany(mappedBy = "leilao", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Lance> lances = new ArrayList<>();
 }

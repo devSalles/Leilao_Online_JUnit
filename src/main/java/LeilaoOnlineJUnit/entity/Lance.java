@@ -27,14 +27,11 @@ public class Lance {
     @Column(nullable = false)
     private LocalDateTime dataHora;
 
-    @ManyToOne
-    @JoinColumn(name = "usuario_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    @OneToOne(mappedBy = "lance")
-    private Item item;
-
-    @ManyToOne
-    @JoinColumn(name = "lance_id",nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "leilao_id", nullable = false)
     private Leilao leilao;
 }

@@ -39,9 +39,8 @@ public class Item {
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
-    private Usuario usuario = new Usuario();
+    private Usuario proprietario;
 
-    @OneToOne
-    @JoinColumn(name = "lance_id")
-    private Lance lance;
+    @OneToOne(mappedBy = "item")
+    private Leilao leilao;
 }
