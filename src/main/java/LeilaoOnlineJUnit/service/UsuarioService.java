@@ -133,13 +133,13 @@ public class UsuarioService {
     {
         Usuario usuarioRemover = buscarIdUsuario(idUsuario);
 
-        boolean possuiLeilaoAtivo = itemRepository.existsByUsuarioIdAndLeilaoIdIsNotNull(idUsuario);
+        boolean possuiLeilaoAtivo = itemRepository.existsByProprietarioIdAndLeilaoIdIsNotNull(idUsuario);
         if(possuiLeilaoAtivo)
         {
             throw new PossuiLeilaoAtivoException();
         }
 
-        boolean possuiItemEmLeilao = leilaoRepository.existsByUsuarioIdAndStatus(idUsuario, List.of(StatusLeilao.AGENDADO,StatusLeilao.ABERTO));
+        boolean possuiItemEmLeilao = leilaoRepository.existsByCriadorIdAndStatusLeilaoIn(idUsuario, List.of(StatusLeilao.AGENDADO,StatusLeilao.ABERTO));
         if(possuiItemEmLeilao)
         {
             throw new PossuiItemEmLeilaoException();

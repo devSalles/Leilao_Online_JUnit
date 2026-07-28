@@ -6,9 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.List;
 
 @Repository
 public interface LeilaoRepository extends JpaRepository<Leilao,Long> {
-    boolean existsByUsuarioIdAndStatus(Long usuarioId, Collection<StatusLeilao> status);
 
-}
+    boolean existsByCriadorIdAndStatusLeilaoIn(Long criadorId, List<StatusLeilao> statusLeilao);}
