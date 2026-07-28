@@ -1,5 +1,6 @@
 package LeilaoOnlineJUnit.service;
 
+import LeilaoOnlineJUnit.Enum.StatusLeilao;
 import LeilaoOnlineJUnit.Enum.StatusUsuario;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioRequestDTO;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioResponseDTO;
@@ -8,10 +9,9 @@ import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.UsuarioBloqueadoException;
-import LeilaoOnlineJUnit.infra.exception.participante.CpfNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.participante.CpfRepetidoException;
-import LeilaoOnlineJUnit.infra.exception.participante.EmailNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.participante.EmailRepetidoException;
+import LeilaoOnlineJUnit.infra.exception.participante.*;
+import LeilaoOnlineJUnit.repository.ItemRepository;
+import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import LeilaoOnlineJUnit.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +24,8 @@ import java.util.List;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final ItemRepository itemRepository;
+    private final LeilaoRepository leilaoRepository;
 
     @Transactional
     public UsuarioResponseDTO salvarUsuario(UsuarioRequestDTO usuarioRequestDTO)
@@ -124,6 +126,27 @@ public class UsuarioService {
         usuarioBloqueado.setStatusUsuario(StatusUsuario.BLOQUEADO);
         this.usuarioRepository.save(usuarioBloqueado);
         return  UsuarioResponseDTO.fromUsuario(usuarioBloqueado);
+    }
+
+    @Transactional
+    public UsuarioResponseDTO removerUsuario(Long idUsuario)
+    {
+        Usuario usuarioRemover = buscarIdUsuario(idUsuario);
+
+        boolean possuiLeilaoAtivo = itemRepository.existsByUsuarioIdAndLeilaoIdIsNotNull(idUsuario);
+        if(possuiLeilaoAtivo)
+        {
+            throw new PossuiLeilaoAtivoException();
+        }
+
+        boolean possuiItemEmLeilao = leilaoRepository.existsByUsuarioIdAndStatus(idUsuario, List.of(StatusLeilao.AGENDADO,StatusLeilao.ABERTO));
+        if(possuiItemEmLeilao)
+        {
+            throw new PossuiItemEmLeilaoException();
+        }
+
+        usuarioRepository.delete(usuarioRemover);
+        return  UsuarioResponseDTO.fromUsuario(usuarioRemover);
     }
 
     // --- METODO AUXILIAR ---

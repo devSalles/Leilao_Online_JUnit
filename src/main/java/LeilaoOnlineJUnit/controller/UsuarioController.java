@@ -74,9 +74,14 @@ public class UsuarioController {
     }
 
     @GetMapping("/exibir-por-status/{statusUsuario}")
-    public ResponseEntity<List<UsuarioResponseDTO>> controllerExibirPorEmail(@PathVariable StatusUsuario statusUsuario)
+    public ResponseEntity<List<UsuarioResponseDTO>> controllerExibirPorStatus(@PathVariable StatusUsuario statusUsuario)
     {
         List<UsuarioResponseDTO> usuarioResponseDTO = usuarioService.exibirPorStatus(statusUsuario);
+        return ResponseEntity.ok(usuarioResponseDTO);
+    }
+    @DeleteMapping("/remover-usuario/{idUsuario}")
+    public ResponseEntity<UsuarioResponseDTO> controllerRemoverUsuario(@PathVariable Long idUsuario) {
+        UsuarioResponseDTO usuarioResponseDTO = usuarioService.removerUsuario(idUsuario);
         return ResponseEntity.ok(usuarioResponseDTO);
     }
 }
