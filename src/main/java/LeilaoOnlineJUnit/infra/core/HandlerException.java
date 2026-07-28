@@ -3,10 +3,7 @@ package LeilaoOnlineJUnit.infra.core;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.UsuarioBloqueadoException;
-import LeilaoOnlineJUnit.infra.exception.participante.CpfNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.participante.CpfRepetidoException;
-import LeilaoOnlineJUnit.infra.exception.participante.EmailNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.participante.EmailRepetidoException;
+import LeilaoOnlineJUnit.infra.exception.participante.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -81,5 +78,19 @@ public class HandlerException {
     {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.NOT_FOUND, ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageRestError);
+    }
+
+    @ExceptionHandler(PossuiItemEmLeilaoException.class)
+    public ResponseEntity<MessageRestError> PossuiItemEmLeilaoException(PossuiItemEmLeilaoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
+    }
+
+    @ExceptionHandler(PossuiLeilaoAtivoException.class)
+    public ResponseEntity<MessageRestError> PossuiLeilaoAtivoException(PossuiLeilaoAtivoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
     }
 }
