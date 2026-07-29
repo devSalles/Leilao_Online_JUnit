@@ -14,7 +14,7 @@ public record ItemResponseDTO(
         StatusItem statusItem,
         Long proprietarioItemId
 ) {
-    public ItemResponseDTO fromItem(Item item)
+    public static ItemResponseDTO fromItem(Item item)
     {
         return  new ItemResponseDTO(item.getId(),item.getNome(),item.getDescricao(),item.getCategoria(),item.getValorInicial()
         ,item.getStatusItem(),item.getProprietario().getId());
