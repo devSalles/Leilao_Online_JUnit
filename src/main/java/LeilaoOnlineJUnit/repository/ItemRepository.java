@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface ItemRepository extends JpaRepository<Item,Long> {
 
     boolean existsByProprietarioIdAndLeilaoIdIsNotNull(Long usuarioId);
+    boolean existsByIdAndProprietarioIdNot(Long idItem,Long usuarioId);
 }
