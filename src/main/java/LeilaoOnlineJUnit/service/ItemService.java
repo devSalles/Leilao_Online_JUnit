@@ -65,6 +65,46 @@ public class ItemService {
         return ItemResponseDTO.fromItem(itemID);
     }
 
+    public List<ItemResponseDTO> buscarPorCategoria(String categoria)
+    {
+        List<Item> itemCategoria = itemRepository.findByCategoria(categoria);
+        if (itemCategoria.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro de categoria encontrado");
+        }
+        return itemCategoria.stream().map(ItemResponseDTO::fromItem).toList();
+    }
+
+    public List<ItemResponseDTO> buscarItemPorStatus(StatusItem statusItem)
+    {
+        List<Item> itemStatus = itemRepository.findByStatusItem(statusItem);
+        if (itemStatus.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro de status encontrado");
+        }
+        return itemStatus.stream().map(ItemResponseDTO::fromItem).toList();
+    }
+
+    public List<ItemResponseDTO> buscarItemPorProprietario(Long proprietarioId)
+    {
+        List<Item> itemProprietario = itemRepository.findByProprietarioId(proprietarioId);
+        if(itemProprietario.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro de item de proprietário encontrado");
+        }
+        return itemProprietario.stream().map(ItemResponseDTO::fromItem).toList();
+    }
+
+    public List<ItemResponseDTO> buscarPorNome(String nome)
+    {
+        List<Item> itemNome = itemRepository.findByNome(nome);
+        if (itemNome.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro de categoria encontrado");
+        }
+        return itemNome.stream().map(ItemResponseDTO::fromItem).toList();
+    }
+
     // --- Metodo Auxiliar ---
     public Item buscarID(Long id)
     {

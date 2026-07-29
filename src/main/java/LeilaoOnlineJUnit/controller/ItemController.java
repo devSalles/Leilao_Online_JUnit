@@ -1,5 +1,6 @@
 package LeilaoOnlineJUnit.controller;
 
+import LeilaoOnlineJUnit.Enum.StatusItem;
 import LeilaoOnlineJUnit.dto.item.ItemResponseDTO;
 import LeilaoOnlineJUnit.dto.item.ItemResquestDTO;
 import LeilaoOnlineJUnit.dto.item.ItemUpdateRequestDTO;
@@ -46,5 +47,36 @@ public class ItemController {
     public ResponseEntity<ItemResponseDTO> buscarItem(@PathVariable Long idItem) {
         ItemResponseDTO item = itemService.buscarItem(idItem);
         return ResponseEntity.ok(item);
+    }
+    @GetMapping("/buscar-categoria/{categoria}")
+    public ResponseEntity<List<ItemResponseDTO>> buscarPorCategoria(
+            @PathVariable String categoria) {
+
+        List<ItemResponseDTO> itens = itemService.buscarPorCategoria(categoria);
+        return ResponseEntity.ok(itens);
+    }
+
+    @GetMapping("/buscar-status/{statusItem}")
+    public ResponseEntity<List<ItemResponseDTO>> buscarItemPorStatus(
+            @PathVariable StatusItem statusItem) {
+
+        List<ItemResponseDTO> itens = itemService.buscarItemPorStatus(statusItem);
+        return ResponseEntity.ok(itens);
+    }
+
+    @GetMapping("/buscar-proprietario/{proprietarioId}")
+    public ResponseEntity<List<ItemResponseDTO>> buscarItemPorProprietario(
+            @PathVariable Long proprietarioId) {
+
+        List<ItemResponseDTO> itens = itemService.buscarItemPorProprietario(proprietarioId);
+        return ResponseEntity.ok(itens);
+    }
+
+    @GetMapping("/buscar-nome/{nome}")
+    public ResponseEntity<List<ItemResponseDTO>> buscarPorNome(
+            @PathVariable String nome) {
+
+        List<ItemResponseDTO> itens = itemService.buscarPorNome(nome);
+        return ResponseEntity.ok(itens);
     }
 }
