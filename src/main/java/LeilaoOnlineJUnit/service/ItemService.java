@@ -49,5 +49,25 @@ public class ItemService {
         return ItemResponseDTO.fromItem(itemAtualizado);
     }
 
-   
+    public List<ItemResponseDTO> buscarTodosItems()
+    {
+        List<Item> itens = itemRepository.findAll();
+        if(itens.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro cadastrado");
+        }
+        return itens.stream().map(ItemResponseDTO::fromItem).toList();
+    }
+
+    public ItemResponseDTO buscarItem(Long id)
+    {
+        Item itemID = buscarID(id);
+        return ItemResponseDTO.fromItem(itemID);
+    }
+
+    // --- Metodo Auxiliar ---
+    public Item buscarID(Long id)
+    {
+        return itemRepository.findById(id).orElseThrow(()->new IdNaoEncontradoException("Id de item não encontrado"));
+    }
 }
