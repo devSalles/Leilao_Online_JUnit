@@ -2,6 +2,7 @@ package LeilaoOnlineJUnit.repository;
 
 import LeilaoOnlineJUnit.Enum.StatusItem;
 import LeilaoOnlineJUnit.entity.Item;
+import LeilaoOnlineJUnit.entity.Leilao;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -11,7 +12,6 @@ import java.util.List;
 public interface ItemRepository extends JpaRepository<Item,Long> {
 
     boolean existsByProprietarioIdAndLeilaoIdIsNotNull(Long usuarioId);
-
 
     List<Item> findByCategoria(String categoria);
     List<Item> findByStatusItem(StatusItem statusItem);
