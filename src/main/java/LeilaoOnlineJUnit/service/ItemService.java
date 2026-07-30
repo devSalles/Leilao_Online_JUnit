@@ -9,7 +9,9 @@ import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
+import LeilaoOnlineJUnit.infra.exception.item.ItemVinculadoAoLeilaoException;
 import LeilaoOnlineJUnit.repository.ItemRepository;
+import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +24,7 @@ public class ItemService {
 
     private final UsuarioService usuarioService;
     private final ItemRepository itemRepository;
+    private final LeilaoRepository leilaoRepository;
 
     @Transactional
     public ItemResponseDTO salvarItem(ItemResquestDTO itemResquestDTO)
@@ -104,6 +107,18 @@ public class ItemService {
         }
         return itemNome.stream().map(ItemResponseDTO::fromItem).toList();
     }
+
+     public void removerItem(Long idItem)
+     {
+        Item itemID = buscarID(idItem);
+
+        if(itemID.getStatusItem() != StatusItem.DISPONIVEL)
+        {
+            throw new ItemVinculadoAoLeilaoException();
+        }
+
+        itemRepository.delete(itemID);
+     }
 
     // --- Metodo Auxiliar ---
     public Item buscarID(Long id)
