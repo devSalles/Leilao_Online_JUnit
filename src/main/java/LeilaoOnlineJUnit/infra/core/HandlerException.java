@@ -5,6 +5,7 @@ import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemComProprietarioVinculadoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
+import LeilaoOnlineJUnit.infra.exception.item.ItemVinculadoAoLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.participante.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -63,6 +64,13 @@ public class HandlerException {
 
     @ExceptionHandler(ItemComProprietarioVinculadoException.class)
     public ResponseEntity<MessageRestError> ItemComProprietarioVinculadoException(UsuarioBloqueadoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
+    }
+
+    @ExceptionHandler(ItemVinculadoAoLeilaoException.class)
+    public ResponseEntity<MessageRestError> ItemVinculadoAoLeilaoException(ItemVinculadoAoLeilaoException ex)
     {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
