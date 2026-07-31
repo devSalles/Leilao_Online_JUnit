@@ -2,7 +2,7 @@ package LeilaoOnlineJUnit.infra.core;
 
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
-import LeilaoOnlineJUnit.infra.exception.UsuarioBloqueadoException;
+import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemComProprietarioVinculadoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVinculadoAoLeilaoException;
@@ -51,13 +51,6 @@ public class HandlerException {
     {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.NOT_FOUND,ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageRestError);
-    }
-
-    @ExceptionHandler(UsuarioBloqueadoException.class)
-    public ResponseEntity<MessageRestError> UsuarioBloqueadoException(UsuarioBloqueadoException ex)
-    {
-        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
     }
 
     // --- Exceções Item ---
@@ -118,5 +111,19 @@ public class HandlerException {
     {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
+    }
+
+    @ExceptionHandler(UsuarioBloqueadoException.class)
+    public ResponseEntity<MessageRestError> UsuarioBloqueadoException(UsuarioBloqueadoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
+    }
+
+    @ExceptionHandler(UsuarioAtivoException.class)
+    public ResponseEntity<MessageRestError> UsuarioAtivoException(UsuarioAtivoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
     }
 }
