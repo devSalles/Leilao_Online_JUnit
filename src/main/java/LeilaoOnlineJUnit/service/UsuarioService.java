@@ -8,7 +8,7 @@ import LeilaoOnlineJUnit.dto.usuario.UsuarioUpdateRequestDTO;
 import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
-import LeilaoOnlineJUnit.infra.exception.UsuarioBloqueadoException;
+import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.infra.exception.participante.*;
 import LeilaoOnlineJUnit.repository.ItemRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
@@ -128,6 +128,20 @@ public class UsuarioService {
         return  UsuarioResponseDTO.fromUsuario(usuarioBloqueado);
     }
 
+    public UsuarioResponseDTO desbloquearUsuario(Long idUser)
+    {
+        Usuario usuarioDesbloqueado = buscarIdUsuario(idUser);
+
+        if(usuarioDesbloqueado.getStatusUsuario().equals(StatusUsuario.ATIVO))
+        {
+            throw new UsuarioAtivoException();
+        }
+
+        usuarioDesbloqueado.setStatusUsuario(StatusUsuario.ATIVO);
+        this.usuarioRepository.save(usuarioDesbloqueado);
+        return  UsuarioResponseDTO.fromUsuario(usuarioDesbloqueado);
+    }
+
     @Transactional
     public UsuarioResponseDTO removerUsuario(Long idUsuario)
     {
@@ -136,13 +150,13 @@ public class UsuarioService {
         boolean possuiItemVinculadoLeilao = itemRepository.existsByProprietarioIdAndLeilaoIdIsNotNull(idUsuario);
         if(possuiItemVinculadoLeilao)
         {
-            throw new PossuiLeilaoAtivoException();
+            throw new  PossuiItemEmLeilaoException();
         }
 
         boolean possuiLeilaoAtivo  = leilaoRepository.existsByCriadorIdAndStatusLeilaoIn(idUsuario, List.of(StatusLeilao.AGENDADO,StatusLeilao.ABERTO));
         if(possuiLeilaoAtivo )
         {
-            throw new PossuiItemEmLeilaoException();
+            throw new PossuiLeilaoAtivoException();
         }
 
         usuarioRepository.delete(usuarioRemover);

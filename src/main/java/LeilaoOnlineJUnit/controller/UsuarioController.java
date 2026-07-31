@@ -45,6 +45,13 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioResponseDTO);
     }
 
+    @PatchMapping("/desbloquear-usuario/{idUsuario}")
+    public ResponseEntity<UsuarioResponseDTO> desbloquearUsuario(@PathVariable Long idUsuario)
+    {
+        UsuarioResponseDTO usuarioResponseDTO = usuarioService.desbloquearUsuario(idUsuario);
+        return ResponseEntity.ok(usuarioResponseDTO);
+    }
+
     @GetMapping("/exibir-por-id/{idUser}")
     public ResponseEntity<UsuarioResponseDTO> controllerExibirPorId(@PathVariable Long idUser)
     {
