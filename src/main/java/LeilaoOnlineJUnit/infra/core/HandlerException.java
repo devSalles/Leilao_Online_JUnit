@@ -2,6 +2,7 @@ package LeilaoOnlineJUnit.infra.core;
 
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
+import LeilaoOnlineJUnit.infra.exception.item.ItemVendidoException;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemComProprietarioVinculadoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
@@ -71,6 +72,13 @@ public class HandlerException {
 
     @ExceptionHandler(ItemEmLeilaoException.class)
     public ResponseEntity<MessageRestError> ItemEmLeilaoException(ItemEmLeilaoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
+    }
+
+    @ExceptionHandler(ItemVendidoException.class)
+    public ResponseEntity<MessageRestError> ItemVendidoException(ItemVendidoException ex)
     {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
