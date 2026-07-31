@@ -9,6 +9,7 @@ import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
+import LeilaoOnlineJUnit.infra.exception.item.ItemVendidoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVinculadoAoLeilaoException;
 import LeilaoOnlineJUnit.repository.ItemRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
@@ -42,10 +43,7 @@ public class ItemService {
     {
         Item itemID = itemRepository.findById(id).orElseThrow(()-> new IdNaoEncontradoException("Id de item não encontrado"));
 
-        if(itemID.getStatusItem().equals(StatusItem.EM_LEILAO))
-        {
-            throw new ItemEmLeilaoException();
-        }
+        validarItemEditavel(itemID);
 
         Item itemAtualizado = itemUpdateRequestDTO.updateItem(itemID);
         itemRepository.save(itemAtualizado);
@@ -112,6 +110,12 @@ public class ItemService {
      {
         Item itemID = buscarID(idItem);
 
+        boolean possuiLeilaoVinculado = leilaoRepository.existsByItemId(idItem);
+        if(possuiLeilaoVinculado)
+        {
+            throw new  ItemVinculadoAoLeilaoException();
+        }
+
         if(itemID.getStatusItem() != StatusItem.DISPONIVEL)
         {
             throw new ItemVinculadoAoLeilaoException();
@@ -121,8 +125,22 @@ public class ItemService {
      }
 
     // --- Metodo Auxiliar ---
+
     public Item buscarID(Long id)
     {
         return itemRepository.findById(id).orElseThrow(()->new IdNaoEncontradoException("Id de item não encontrado"));
+    }
+
+    private void validarItemEditavel(Item item)
+    {
+        if(item.getStatusItem() == StatusItem.EM_LEILAO)
+        {
+            throw new ItemEmLeilaoException();
+        }
+
+        if(item.getStatusItem() == StatusItem.VENDIDO)
+        {
+            throw new ItemVendidoException();
+        }
     }
 }
