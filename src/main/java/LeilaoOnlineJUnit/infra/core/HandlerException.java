@@ -2,11 +2,8 @@ package LeilaoOnlineJUnit.infra.core;
 
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
-import LeilaoOnlineJUnit.infra.exception.item.ItemVendidoException;
+import LeilaoOnlineJUnit.infra.exception.item.*;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
-import LeilaoOnlineJUnit.infra.exception.item.ItemComProprietarioVinculadoException;
-import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
-import LeilaoOnlineJUnit.infra.exception.item.ItemVinculadoAoLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.participante.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -82,6 +79,20 @@ public class HandlerException {
     {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
+    }
+
+    @ExceptionHandler(PrimeiroLanceInvaidoException.class)
+    public ResponseEntity<MessageRestError> PrimeiroLanceInvaidoException(PrimeiroLanceInvaidoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
+    }
+
+    @ExceptionHandler(LanceInvalidoException.class)
+    public ResponseEntity<MessageRestError> LanceInvalidoException(LanceInvalidoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return  ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
     }
 
     // --- Exceções Usuário ---
