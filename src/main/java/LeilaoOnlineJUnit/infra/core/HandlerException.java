@@ -3,13 +3,17 @@ package LeilaoOnlineJUnit.infra.core;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.item.*;
+import LeilaoOnlineJUnit.infra.exception.leilao.DataIncorretaException;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.infra.exception.participante.*;
+import jakarta.servlet.annotation.HandlesTypes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import javax.swing.plaf.PanelUI;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,6 +53,57 @@ public class HandlerException {
     {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.NOT_FOUND,ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageRestError);
+    }
+
+    // --- Exceções Usuário ---
+
+    @ExceptionHandler({
+            EmailRepetidoException.class,
+            CpfRepetidoException.class
+    })
+    public ResponseEntity<MessageRestError> excecoesCadastrosRepetidos(Exception ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
+
+    }
+
+    @ExceptionHandler({
+            CpfNaoEncontradoException.class,
+            EmailNaoEncontradoException.class
+    })
+    public ResponseEntity<MessageRestError> excecoesCpfEEmailNaoEncontrado(Exception ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.NOT_FOUND, ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageRestError);
+    }
+
+    @ExceptionHandler(PossuiItemEmLeilaoException.class)
+    public ResponseEntity<MessageRestError> PossuiItemEmLeilaoException(PossuiItemEmLeilaoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
+    }
+
+    @ExceptionHandler(PossuiLeilaoAtivoException.class)
+    public ResponseEntity<MessageRestError> PossuiLeilaoAtivoException(PossuiLeilaoAtivoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
+    }
+
+    @ExceptionHandler(UsuarioBloqueadoException.class)
+    public ResponseEntity<MessageRestError> UsuarioBloqueadoException(UsuarioBloqueadoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
+    }
+
+    @ExceptionHandler(UsuarioAtivoException.class)
+    public ResponseEntity<MessageRestError> UsuarioAtivoException(UsuarioAtivoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
     }
 
     // --- Exceções Item ---
@@ -92,57 +147,15 @@ public class HandlerException {
     public ResponseEntity<MessageRestError> LanceInvalidoException(LanceInvalidoException ex)
     {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
-        return  ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
-    }
-
-    // --- Exceções Usuário ---
-
-    @ExceptionHandler({
-            EmailRepetidoException.class,
-            CpfRepetidoException.class
-    })
-    public ResponseEntity<MessageRestError> excecoesCadastrosRepetidos(Exception ex)
-    {
-        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT, ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
-
     }
 
-    @ExceptionHandler({
-            CpfNaoEncontradoException.class,
-            EmailNaoEncontradoException.class
-            })
-    public ResponseEntity<MessageRestError> excecoesCpfEEmailNaoEncontrado(Exception ex)
-    {
-        MessageRestError messageRestError = new MessageRestError(HttpStatus.NOT_FOUND, ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageRestError);
-    }
-
-    @ExceptionHandler(PossuiItemEmLeilaoException.class)
-    public ResponseEntity<MessageRestError> PossuiItemEmLeilaoException(PossuiItemEmLeilaoException ex)
+    // --- Exceções Leilão ---
+    @ExceptionHandler(DataIncorretaException.class)
+    public ResponseEntity<MessageRestError> DataIncorretaException(DataIncorretaException ex)
     {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
     }
 
-    @ExceptionHandler(PossuiLeilaoAtivoException.class)
-    public ResponseEntity<MessageRestError> PossuiLeilaoAtivoException(PossuiLeilaoAtivoException ex)
-    {
-        MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
-    }
-
-    @ExceptionHandler(UsuarioBloqueadoException.class)
-    public ResponseEntity<MessageRestError> UsuarioBloqueadoException(UsuarioBloqueadoException ex)
-    {
-        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
-    }
-
-    @ExceptionHandler(UsuarioAtivoException.class)
-    public ResponseEntity<MessageRestError> UsuarioAtivoException(UsuarioAtivoException ex)
-    {
-        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
-    }
 }

@@ -1,4 +1,4 @@
-package LeilaoOnlineJUnit.infra.exception.item;
+package LeilaoOnlineJUnit.infra.exception.leilao;
 
 public class DataIncorretaException extends RuntimeException {
     public DataIncorretaException(String message) {
