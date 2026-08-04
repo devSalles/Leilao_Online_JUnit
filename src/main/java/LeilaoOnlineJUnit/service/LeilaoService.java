@@ -8,17 +8,23 @@ import LeilaoOnlineJUnit.dto.leilao.LeilaoResponseDTO;
 import LeilaoOnlineJUnit.entity.Item;
 import LeilaoOnlineJUnit.entity.Leilao;
 import LeilaoOnlineJUnit.entity.Usuario;
+import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
+import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.leilao.DataIncorretaException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVendidoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVinculadoAoLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.function.BiFunction;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +34,7 @@ public class LeilaoService {
     private final ItemService itemService;
     private final UsuarioService usuarioService;
 
+    @Transactional
     public LeilaoResponseDTO agendarLeilao(LeilaoRequestDTO  leilaoRequestDTO)
     {
         Usuario criadorID = usuarioService.buscarIdUsuario(leilaoRequestDTO.idCriador());
@@ -49,7 +56,94 @@ public class LeilaoService {
         return LeilaoResponseDTO.fromLeilao(leilaoSalvar);
     }
 
+    public List<LeilaoResponseDTO> listarTodosLeiloes()
+    {
+        List<Leilao> leiloes = leilaoRepository.findAll();
+
+        if(leiloes.isEmpty())
+        {
+          throw new NenhumRegistroException("Nenhum registro foi encontrado");
+        }
+
+        return leiloes.stream().map(LeilaoResponseDTO::fromLeilao).toList();
+    }
+
+    public LeilaoResponseDTO buscarID(Long idLeilao)
+    {
+        Leilao leilaoID = buscarLeilaoID(idLeilao);
+        return LeilaoResponseDTO.fromLeilao(leilaoID);
+    }
+
+    public List<LeilaoResponseDTO> listarLeiloesPorStatus(StatusLeilao statusLeilao)
+    {
+        List<Leilao> leiloes = leilaoRepository.findByStatusLeilao(statusLeilao);
+
+        if(leiloes.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro com esse status foi encontrado");
+        }
+
+        return leiloes.stream().map(LeilaoResponseDTO::fromLeilao).toList();
+    }
+
+    public List<LeilaoResponseDTO> listarPorVencedor(Long idVencedor)
+    {
+        List<Leilao> leilaoIdVencedor =  leilaoRepository.findByVencedorId(idVencedor);
+
+        if(leilaoIdVencedor.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro com esse id foi encontrado");
+        }
+
+        return leilaoIdVencedor.stream().map(LeilaoResponseDTO::fromLeilao).toList();
+    }
+
+    public List<LeilaoResponseDTO> listarPorCriadorId(Long idCriador)
+    {
+        List<Leilao> leilaoIdCriador =  leilaoRepository.findByCriadorId(idCriador);
+
+        if(leilaoIdCriador.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro com esse id foi encontrado");
+        }
+
+        return leilaoIdCriador.stream().map(LeilaoResponseDTO::fromLeilao).toList();
+    }
+
+    public List<LeilaoResponseDTO> realizarBuscaPorDataInicial(LocalDate dataInicial, LocalDate dataFinal)
+    {
+        return realizarBuscaEntreDatas(dataInicial,dataFinal,leilaoRepository::findByDataInicioBetween);
+    }
+
+    public List<LeilaoResponseDTO> realizarBuscarEntreDatasFinais(LocalDate dataInicial, LocalDate dataFinal)
+    {
+        return realizarBuscaEntreDatas(dataInicial,dataFinal,leilaoRepository::findByDataFimBetween);
+    }
+
     //--- Metodos Auxiliares ---
+
+    public Leilao buscarLeilaoID(Long idLeilao)
+    {
+        return leilaoRepository.findById(idLeilao).orElseThrow(()->new IdNaoEncontradoException("ID de lelião não encontrado"));
+    }
+
+    public List<LeilaoResponseDTO> realizarBuscaEntreDatas(LocalDate dataInicial, LocalDate dataFinal, BiFunction<LocalDateTime, LocalDateTime, List<Leilao>> leilao)
+    {
+        if(dataFinal.isBefore(dataInicial))
+        {
+            throw new DataIncorretaException("Datas de início esta posterior a data final");
+        }
+
+        LocalDateTime dataInicialFormatada = dataInicial.atStartOfDay();
+        LocalDateTime dataFinalFormatada = dataFinal.atTime(LocalTime.MAX);
+
+        List<Leilao> leiloes = leilao.apply(dataInicialFormatada,dataFinalFormatada);
+        if (leiloes.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro encontrado com essas datas");
+        }
+        return  leiloes.stream().map(LeilaoResponseDTO::fromLeilao).toList();
+    }
 
     public void validarDatasAgendamentoLeilao(LeilaoRequestDTO  leilaoRequestDTO)
     {
