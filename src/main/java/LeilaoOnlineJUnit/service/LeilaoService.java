@@ -41,7 +41,7 @@ public class LeilaoService {
         Usuario criadorID = usuarioService.buscarIdUsuario(leilaoRequestDTO.idCriador());
         Item itemID = itemService.buscarID(leilaoRequestDTO.idItem());
 
-        validarAgendamentoLeilao(criadorID, itemID);
+        validarCriadorItemLeilao(criadorID, itemID);
         validarDatasLeilao(leilaoRequestDTO);
 
         boolean itemVinculadoLeilao = leilaoRepository.existsByItemIdAndStatusLeilaoIn(
@@ -71,7 +71,10 @@ public class LeilaoService {
         Item item = itemService.buscarID(leilaoRequestDTO.idItem());
         Usuario criador = usuarioService.buscarIdUsuario(leilaoRequestDTO.idCriador());
 
+        validarCriadorItemLeilao(criador,item);
+
         Leilao leilaoAtualizado = leilaoRequestDTO.updateLeilao(leilao, item, criador);
+
         leilaoRepository.save(leilaoAtualizado);
 
         return LeilaoResponseDTO.fromLeilao(leilaoAtualizado);
@@ -181,7 +184,7 @@ public class LeilaoService {
         }
     }
 
-    public void validarAgendamentoLeilao(Usuario criador, Item item)
+    public void validarCriadorItemLeilao(Usuario criador, Item item)
     {
         if(criador.getStatusUsuario().equals(StatusUsuario.BLOQUEADO))
         {
