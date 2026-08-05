@@ -14,6 +14,7 @@ import LeilaoOnlineJUnit.infra.exception.leilao.DataIncorretaException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVendidoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVinculadoAoLeilaoException;
+import LeilaoOnlineJUnit.infra.exception.leilao.StatusDeLeilaoIncorretoException;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import jakarta.transaction.Transactional;
@@ -41,7 +42,7 @@ public class LeilaoService {
         Item itemID = itemService.buscarID(leilaoRequestDTO.idItem());
 
         validarAgendamentoLeilao(criadorID, itemID);
-        validarDatasAgendamentoLeilao(leilaoRequestDTO);
+        validarDatasLeilao(leilaoRequestDTO);
 
         boolean itemVinculadoLeilao = leilaoRepository.existsByItemIdAndStatusLeilaoIn(
                 itemID.getId(), List.of(StatusLeilao.ABERTO, StatusLeilao.AGENDADO));
@@ -54,6 +55,26 @@ public class LeilaoService {
 
         this.leilaoRepository.save(leilaoSalvar);
         return LeilaoResponseDTO.fromLeilao(leilaoSalvar);
+    }
+
+    @Transactional
+    public LeilaoResponseDTO atualizarLeilao(Long idLeilao, LeilaoRequestDTO leilaoRequestDTO)
+    {
+        validarDatasLeilao(leilaoRequestDTO);
+
+        Leilao leilao = buscarLeilaoID(idLeilao);
+        if (leilao.getStatusLeilao() != StatusLeilao.AGENDADO)
+        {
+            throw new StatusDeLeilaoIncorretoException();
+        }
+
+        Item item = itemService.buscarID(leilaoRequestDTO.idItem());
+        Usuario criador = usuarioService.buscarIdUsuario(leilaoRequestDTO.idCriador());
+
+        Leilao leilaoAtualizado = leilaoRequestDTO.updateLeilao(leilao, item, criador);
+        leilaoRepository.save(leilaoAtualizado);
+
+        return LeilaoResponseDTO.fromLeilao(leilaoAtualizado);
     }
 
     public List<LeilaoResponseDTO> listarTodosLeiloes()
@@ -145,7 +166,7 @@ public class LeilaoService {
         return  leiloes.stream().map(LeilaoResponseDTO::fromLeilao).toList();
     }
 
-    public void validarDatasAgendamentoLeilao(LeilaoRequestDTO  leilaoRequestDTO)
+    public void validarDatasLeilao(LeilaoRequestDTO  leilaoRequestDTO)
     {
         if (leilaoRequestDTO.dataInicio().isAfter(leilaoRequestDTO.dataFim())) {
             throw new DataIncorretaException();

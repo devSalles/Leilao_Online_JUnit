@@ -37,4 +37,15 @@ public record LeilaoRequestDTO(
 
         return leilao;
     }
+
+    public Leilao updateLeilao(Leilao leilao, Item item, Usuario criador)
+    {
+        leilao.setDataInicio(dataInicio);
+        leilao.setDataFim(dataFim);
+        leilao.setStatusLeilao(StatusLeilao.AGENDADO);
+        leilao.setCriador(criador);
+        leilao.setItem(item);
+
+        return leilao;
+    }
 }
