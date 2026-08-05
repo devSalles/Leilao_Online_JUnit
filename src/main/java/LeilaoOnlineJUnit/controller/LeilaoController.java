@@ -34,6 +34,15 @@ public class LeilaoController {
         return ResponseEntity.created(creation).body(leilaoResponseDTO);
     }
 
+    @PutMapping("/atualizar-leilao/{idLeilao}")
+    public ResponseEntity<LeilaoResponseDTO> atualizarLeilaoController(
+            @PathVariable Long idLeilao,
+            @Valid @RequestBody LeilaoRequestDTO leilaoRequestDTO)
+    {
+        LeilaoResponseDTO leilaoResponseDTO = leilaoService.atualizarLeilao(idLeilao, leilaoRequestDTO);
+        return ResponseEntity.ok(leilaoResponseDTO);
+    }
+
     @GetMapping("/listar-todos")
     public ResponseEntity<List<LeilaoResponseDTO>> listarTodosLeiloesController()
     {
