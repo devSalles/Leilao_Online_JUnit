@@ -14,6 +14,8 @@ import LeilaoOnlineJUnit.infra.exception.leilao.DataIncorretaException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVendidoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVinculadoAoLeilaoException;
+import LeilaoOnlineJUnit.infra.exception.leilao.DataInicioLeilaoException;
+import LeilaoOnlineJUnit.infra.exception.leilao.LeilaoAbertoException;
 import LeilaoOnlineJUnit.infra.exception.leilao.StatusDeLeilaoIncorretoException;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
@@ -80,6 +82,20 @@ public class LeilaoService {
         return LeilaoResponseDTO.fromLeilao(leilaoAtualizado);
     }
 
+    @Transactional
+    public LeilaoResponseDTO abrirLeilao(Long id)
+    {
+        Leilao leilao = buscarLeilaoID(id);
+
+        validarAberturaLeilao(leilao);
+
+        leilao.setStatusLeilao(StatusLeilao.ABERTO);
+
+        leilaoRepository.save(leilao);
+
+        return  LeilaoResponseDTO.fromLeilao(leilao);
+    }
+
     public List<LeilaoResponseDTO> listarTodosLeiloes()
     {
         List<Leilao> leiloes = leilaoRepository.findAll();
@@ -92,7 +108,7 @@ public class LeilaoService {
         return leiloes.stream().map(LeilaoResponseDTO::fromLeilao).toList();
     }
 
-    public LeilaoResponseDTO buscarID(Long idLeilao)
+    public LeilaoResponseDTO listarID(Long idLeilao)
     {
         Leilao leilaoID = buscarLeilaoID(idLeilao);
         return LeilaoResponseDTO.fromLeilao(leilaoID);
@@ -149,6 +165,19 @@ public class LeilaoService {
     public Leilao buscarLeilaoID(Long idLeilao)
     {
         return leilaoRepository.findById(idLeilao).orElseThrow(()->new IdNaoEncontradoException("ID de lelião não encontrado"));
+    }
+
+    public void validarAberturaLeilao(Leilao leilao)
+    {
+        if(leilao.getStatusLeilao().equals(StatusLeilao.ABERTO))
+        {
+            throw new LeilaoAbertoException();
+        }
+
+        if(LocalDateTime.now().isBefore(leilao.getDataInicio()))
+        {
+            throw new DataInicioLeilaoException();
+        }
     }
 
     public List<LeilaoResponseDTO> realizarBuscaEntreDatas(LocalDate dataInicial, LocalDate dataFinal, BiFunction<LocalDateTime, LocalDateTime, List<Leilao>> leilao)

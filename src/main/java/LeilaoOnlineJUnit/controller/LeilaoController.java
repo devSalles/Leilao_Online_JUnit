@@ -43,6 +43,13 @@ public class LeilaoController {
         return ResponseEntity.ok(leilaoResponseDTO);
     }
 
+    @PutMapping("/abrir-leilao/{idLeilao}")
+    public ResponseEntity<LeilaoResponseDTO> abrirLeilaoController(@PathVariable Long idLeilao)
+    {
+        LeilaoResponseDTO leilaoResponseDTO = leilaoService.abrirLeilao(idLeilao);
+        return ResponseEntity.ok(leilaoResponseDTO);
+    }
+
     @GetMapping("/listar-todos")
     public ResponseEntity<List<LeilaoResponseDTO>> listarTodosLeiloesController()
     {
@@ -53,7 +60,7 @@ public class LeilaoController {
     public ResponseEntity<LeilaoResponseDTO> buscarLeilaoPorIdController(@PathVariable Long idLeilao)
     {
 
-        return ResponseEntity.ok(leilaoService.buscarID(idLeilao));
+        return ResponseEntity.ok(leilaoService.listarID(idLeilao));
     }
 
     @GetMapping("/buscar-por-status/{statusLeilao}")
