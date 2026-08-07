@@ -117,6 +117,19 @@ public class LeilaoService {
         return LeilaoResponseDTO.fromLeilao(leilao);
     }
 
+//    @Transactional
+//    public LeilaoResponseDTO encerrrarLeilao(Long id)
+//    {
+//        Leilao leilao = buscarLeilaoID(id);
+//
+//        if(leilao.getStatusLeilao()!=StatusLeilao.ABERTO)
+//        {
+//            throw new StatusDeLeilaoIncorretoException("apenas leilão com status ABERTO pode ser cancelado");
+//        }
+//
+//
+//    }
+
     public List<LeilaoResponseDTO> listarTodosLeiloes()
     {
         List<Leilao> leiloes = leilaoRepository.findAll();
