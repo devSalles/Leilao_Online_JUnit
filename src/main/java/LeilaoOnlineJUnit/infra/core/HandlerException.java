@@ -5,6 +5,7 @@ import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.item.*;
 import LeilaoOnlineJUnit.infra.exception.leilao.DataIncorretaException;
 import LeilaoOnlineJUnit.infra.exception.leilao.DataInicioLeilaoException;
+import LeilaoOnlineJUnit.infra.exception.leilao.PossuiLanceVinculadoException;
 import LeilaoOnlineJUnit.infra.exception.leilao.StatusDeLeilaoIncorretoException;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.infra.exception.participante.*;
@@ -153,6 +154,7 @@ public class HandlerException {
     }
 
     // --- Exceções Leilão ---
+
     @ExceptionHandler(DataIncorretaException.class)
     public ResponseEntity<MessageRestError> DataIncorretaException(DataIncorretaException ex)
     {
@@ -181,4 +183,10 @@ public class HandlerException {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
     }
 
+    @ExceptionHandler(PossuiLanceVinculadoException.class)
+    public ResponseEntity<MessageRestError> PossuiLanceVinculadoException(PossuiLanceVinculadoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
+    }
 }
