@@ -10,5 +10,8 @@ import java.util.Optional;
 @Repository
 public interface LanceRepository extends JpaRepository<Lance,Long> {
 
+    boolean existsByLeilaoId(Long LeilaoId);
+
+
     Optional<Lance> findFirstByLeilaoOrderByValorDesc(Leilao  leilao);
 }
