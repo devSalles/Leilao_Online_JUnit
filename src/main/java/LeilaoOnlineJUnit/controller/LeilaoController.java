@@ -50,6 +50,13 @@ public class LeilaoController {
         return ResponseEntity.ok(leilaoResponseDTO);
     }
 
+    @PutMapping("/cancelar-leilao/{idLeilao}")
+    public ResponseEntity<LeilaoResponseDTO> cancelarLeilaoController(@PathVariable Long idLeilao)
+    {
+        LeilaoResponseDTO leilaoResponseDTO = leilaoService.cancelarLeilao(idLeilao);
+        return ResponseEntity.ok(leilaoResponseDTO);
+    }
+
     @GetMapping("/listar-todos")
     public ResponseEntity<List<LeilaoResponseDTO>> listarTodosLeiloesController()
     {

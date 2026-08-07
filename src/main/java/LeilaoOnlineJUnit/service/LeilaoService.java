@@ -10,14 +10,12 @@ import LeilaoOnlineJUnit.entity.Leilao;
 import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
-import LeilaoOnlineJUnit.infra.exception.leilao.DataIncorretaException;
+import LeilaoOnlineJUnit.infra.exception.leilao.*;
 import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVendidoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVinculadoAoLeilaoException;
-import LeilaoOnlineJUnit.infra.exception.leilao.DataInicioLeilaoException;
-import LeilaoOnlineJUnit.infra.exception.leilao.LeilaoAbertoException;
-import LeilaoOnlineJUnit.infra.exception.leilao.StatusDeLeilaoIncorretoException;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
+import LeilaoOnlineJUnit.repository.LanceRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +34,7 @@ public class LeilaoService {
     private final LeilaoRepository leilaoRepository;
     private final ItemService itemService;
     private final UsuarioService usuarioService;
+    private final LanceRepository lanceRepository;
 
     @Transactional
     public LeilaoResponseDTO agendarLeilao(LeilaoRequestDTO  leilaoRequestDTO)
@@ -90,10 +89,32 @@ public class LeilaoService {
         validarAberturaLeilao(leilao);
 
         leilao.setStatusLeilao(StatusLeilao.ABERTO);
+        leilao.getItem().setStatusItem(StatusItem.EM_LEILAO);
 
         leilaoRepository.save(leilao);
 
         return  LeilaoResponseDTO.fromLeilao(leilao);
+    }
+
+    @Transactional
+    public LeilaoResponseDTO cancelarLeilao(Long idLeilao)
+    {
+        Leilao leilao = buscarLeilaoID(idLeilao);
+
+        if(leilao.getStatusLeilao()!=StatusLeilao.AGENDADO)
+        {
+            throw new StatusDeLeilaoIncorretoException("Leilão só pode ser cancelado se estiver com status de agendado");
+        }
+
+        if(lanceRepository.existsByLeilaoId(idLeilao))
+        {
+            throw new PossuiLanceVinculadoException();
+        }
+
+        leilao.setStatusLeilao(StatusLeilao.CANCELADO);
+        leilao.getItem().setStatusItem(StatusItem.DISPONIVEL);
+
+        return LeilaoResponseDTO.fromLeilao(leilao);
     }
 
     public List<LeilaoResponseDTO> listarTodosLeiloes()
