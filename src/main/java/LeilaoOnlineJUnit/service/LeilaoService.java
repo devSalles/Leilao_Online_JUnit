@@ -3,9 +3,11 @@ package LeilaoOnlineJUnit.service;
 import LeilaoOnlineJUnit.Enum.StatusItem;
 import LeilaoOnlineJUnit.Enum.StatusLeilao;
 import LeilaoOnlineJUnit.Enum.StatusUsuario;
+import LeilaoOnlineJUnit.dto.leilao.EncerramentoLeilaoResponseDTO;
 import LeilaoOnlineJUnit.dto.leilao.LeilaoRequestDTO;
 import LeilaoOnlineJUnit.dto.leilao.LeilaoResponseDTO;
 import LeilaoOnlineJUnit.entity.Item;
+import LeilaoOnlineJUnit.entity.Lance;
 import LeilaoOnlineJUnit.entity.Leilao;
 import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
@@ -15,6 +17,7 @@ import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVendidoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVinculadoAoLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
+import LeilaoOnlineJUnit.repository.ItemRepository;
 import LeilaoOnlineJUnit.repository.LanceRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import jakarta.transaction.Transactional;
@@ -32,9 +35,10 @@ import java.util.function.BiFunction;
 public class LeilaoService {
 
     private final LeilaoRepository leilaoRepository;
+    private final LanceRepository lanceRepository;
+
     private final ItemService itemService;
     private final UsuarioService usuarioService;
-    private final LanceRepository lanceRepository;
 
     @Transactional
     public LeilaoResponseDTO agendarLeilao(LeilaoRequestDTO  leilaoRequestDTO)
@@ -66,7 +70,7 @@ public class LeilaoService {
         Leilao leilao = buscarLeilaoID(idLeilao);
         if (leilao.getStatusLeilao() != StatusLeilao.AGENDADO)
         {
-            throw new StatusDeLeilaoIncorretoException();
+            throw new StatusDeLeilaoIncorretoException("Apenas leilões com status de AGENDADO podem ser atualizados");
         }
 
         Item item = itemService.buscarID(leilaoRequestDTO.idItem());
@@ -101,10 +105,16 @@ public class LeilaoService {
     {
         Leilao leilao = buscarLeilaoID(idLeilao);
 
+        if(leilao.getStatusLeilao().equals(StatusLeilao.CANCELADO))
+        {
+            throw new StatusDeLeilaoIncorretoException("Não e possível cancelar leilão, pois ele já está cancelado");
+        }
+
         if(leilao.getStatusLeilao()!=StatusLeilao.AGENDADO)
         {
             throw new StatusDeLeilaoIncorretoException("Leilão só pode ser cancelado se estiver com status de agendado");
         }
+
 
         if(lanceRepository.existsByLeilaoId(idLeilao))
         {
@@ -117,18 +127,30 @@ public class LeilaoService {
         return LeilaoResponseDTO.fromLeilao(leilao);
     }
 
-//    @Transactional
-//    public LeilaoResponseDTO encerrrarLeilao(Long id)
-//    {
-//        Leilao leilao = buscarLeilaoID(id);
-//
-//        if(leilao.getStatusLeilao()!=StatusLeilao.ABERTO)
-//        {
-//            throw new StatusDeLeilaoIncorretoException("apenas leilão com status ABERTO pode ser cancelado");
-//        }
-//
-//
-//    }
+    @Transactional
+    public EncerramentoLeilaoResponseDTO encerrarLeilao(Long id)
+    {
+        Leilao leilao = buscarLeilaoID(id);
+
+        if(leilao.getStatusLeilao().equals(StatusLeilao.ENCERRADO))
+        {
+            throw new StatusDeLeilaoIncorretoException("Não é possível encerrar o leilão, pois ele já está encerrado");
+        }
+
+        if(leilao.getStatusLeilao()!=StatusLeilao.ABERTO)
+        {
+            throw new StatusDeLeilaoIncorretoException("apenas leilão ABERTOS pode ser cancelado");
+        }
+
+        Lance maiorLance = lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao).orElse(null);
+
+        validarEncerramentoLeilao(leilao,maiorLance);
+
+        leilao.setStatusLeilao(StatusLeilao.ENCERRADO);
+        leilaoRepository.save(leilao);
+
+        return EncerramentoLeilaoResponseDTO.fromLeilao(leilao);
+    }
 
     public List<LeilaoResponseDTO> listarTodosLeiloes()
     {
@@ -199,6 +221,26 @@ public class LeilaoService {
     public Leilao buscarLeilaoID(Long idLeilao)
     {
         return leilaoRepository.findById(idLeilao).orElseThrow(()->new IdNaoEncontradoException("ID de lelião não encontrado"));
+    }
+
+    public void validarEncerramentoLeilao(Leilao leilao, Lance maiorLance)
+    {
+        Item item = leilao.getItem();
+
+        if(maiorLance!=null)
+        {
+            Usuario vencedor = leilao.getVencedor();
+
+            leilao.setVencedor(vencedor);
+
+            item.setStatusItem(StatusItem.VENDIDO);
+            item.setLeilao(leilao);
+        }
+        else
+        {
+            leilao.setVencedor(null);
+            item.setStatusItem(StatusItem.DISPONIVEL);
+        }
     }
 
     public void validarAberturaLeilao(Leilao leilao)

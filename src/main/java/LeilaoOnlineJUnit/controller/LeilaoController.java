@@ -1,6 +1,7 @@
 package LeilaoOnlineJUnit.controller;
 
 import LeilaoOnlineJUnit.Enum.StatusLeilao;
+import LeilaoOnlineJUnit.dto.leilao.EncerramentoLeilaoResponseDTO;
 import LeilaoOnlineJUnit.dto.leilao.LeilaoRequestDTO;
 import LeilaoOnlineJUnit.dto.leilao.LeilaoResponseDTO;
 import LeilaoOnlineJUnit.service.LeilaoService;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -55,6 +55,13 @@ public class LeilaoController {
     {
         LeilaoResponseDTO leilaoResponseDTO = leilaoService.cancelarLeilao(idLeilao);
         return ResponseEntity.ok(leilaoResponseDTO);
+    }
+
+    @PutMapping("/encerrar-leilao/{idLeilao}")
+    public ResponseEntity<EncerramentoLeilaoResponseDTO> encerrarLeilaoController(@PathVariable Long idLeilao)
+    {
+        EncerramentoLeilaoResponseDTO encerrarLeilaoResponseDTO  = leilaoService.encerrarLeilao(idLeilao);
+        return ResponseEntity.ok(encerrarLeilaoResponseDTO);
     }
 
     @GetMapping("/listar-todos")
