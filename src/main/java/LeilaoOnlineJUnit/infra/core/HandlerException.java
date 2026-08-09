@@ -3,25 +3,19 @@ package LeilaoOnlineJUnit.infra.core;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.item.*;
-import LeilaoOnlineJUnit.infra.exception.leilao.DataIncorretaException;
-import LeilaoOnlineJUnit.infra.exception.leilao.DataInicioLeilaoException;
-import LeilaoOnlineJUnit.infra.exception.leilao.PossuiLanceVinculadoException;
-import LeilaoOnlineJUnit.infra.exception.leilao.StatusDeLeilaoIncorretoException;
+import LeilaoOnlineJUnit.infra.exception.leilao.*;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.infra.exception.participante.*;
-import jakarta.servlet.annotation.HandlesTypes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
-import javax.swing.plaf.PanelUI;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
 
-@ControllerAdvice
+@RestControllerAdvice
 public class HandlerException {
 
     //Exceções globais
@@ -153,6 +147,14 @@ public class HandlerException {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
     }
 
+    @ExceptionHandler(LeilaoNaoAbertoException.class)
+    public ResponseEntity<MessageRestError> LeilaoNaoAbertoException(LeilaoNaoAbertoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
+    }
+
+
     // --- Exceções Leilão ---
 
     @ExceptionHandler(DataIncorretaException.class)
@@ -176,17 +178,17 @@ public class HandlerException {
         return  ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
     }
 
-    @ExceptionHandler(LeilaoNaoAbertoException.class)
-    public ResponseEntity<MessageRestError> LeilaoNaoAbertoException(LeilaoNaoAbertoException ex)
-    {
-        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
-    }
-
     @ExceptionHandler(PossuiLanceVinculadoException.class)
     public ResponseEntity<MessageRestError> PossuiLanceVinculadoException(PossuiLanceVinculadoException ex)
     {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
+    }
+
+    @ExceptionHandler(LeilaoAbertoException.class)
+    public ResponseEntity<MessageRestError> LeilaoAbertoException(LeilaoAbertoException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return  ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
     }
 }
