@@ -78,6 +78,11 @@ public class LeilaoService {
 
         validarCriadorItemLeilao(criador,item);
 
+        if(!item.getId().equals(leilao.getItem().getId()))
+        {
+            validarItemVinculado(item);
+        }
+
         Leilao leilaoAtualizado = leilaoRequestDTO.updateLeilao(leilao, item, criador);
 
         leilaoRepository.save(leilaoAtualizado);
@@ -204,7 +209,7 @@ public class LeilaoService {
         }
 
         return leilaoIdCriador.stream().map(LeilaoResponseDTO::fromLeilao).toList();
-    }
+    } 
 
     public List<LeilaoResponseDTO> realizarBuscaPorDataInicial(LocalDate dataInicial, LocalDate dataFinal)
     {
@@ -221,6 +226,16 @@ public class LeilaoService {
     public Leilao buscarLeilaoID(Long idLeilao)
     {
         return leilaoRepository.findById(idLeilao).orElseThrow(()->new IdNaoEncontradoException("ID de lelião não encontrado"));
+    }
+
+    private void validarItemVinculado(Item item)
+    {
+        boolean itemVinculado = leilaoRepository.existsByItemIdAndStatusLeilaoIn(item.getId(), List.of(StatusLeilao.AGENDADO, StatusLeilao.ABERTO));
+
+        if(itemVinculado)
+        {
+            throw new ItemVinculadoAoLeilaoException("Esse item já está vinculado a outro leilão");
+        }
     }
 
     public void validarEncerramentoLeilao(Leilao leilao, Lance maiorLance)
@@ -245,7 +260,7 @@ public class LeilaoService {
 
     public void validarAberturaLeilao(Leilao leilao)
     {
-        if(leilao.getStatusLeilao().equals(StatusLeilao.ABERTO))
+        if(leilao.getStatusLeilao() != StatusLeilao.ABERTO)
         {
             throw new LeilaoAbertoException();
         }
