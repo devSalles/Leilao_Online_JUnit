@@ -133,23 +133,18 @@ public class LeilaoService {
     }
 
     @Transactional
-    public EncerramentoLeilaoResponseDTO encerrarLeilao(Long id)
-    {
+    public EncerramentoLeilaoResponseDTO encerrarLeilao(Long id) {
+
         Leilao leilao = buscarLeilaoID(id);
 
-        if(leilao.getStatusLeilao().equals(StatusLeilao.ENCERRADO))
+        if(leilao.getStatusLeilao() != StatusLeilao.ABERTO)
         {
-            throw new StatusDeLeilaoIncorretoException("Não é possível encerrar o leilão, pois ele já está encerrado");
-        }
-
-        if(leilao.getStatusLeilao()!=StatusLeilao.ABERTO)
-        {
-            throw new StatusDeLeilaoIncorretoException("apenas leilão ABERTOS pode ser cancelado");
+            throw new StatusDeLeilaoIncorretoException("Apenas leilões ABERTOS podem ser encerrados");
         }
 
         Lance maiorLance = lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao).orElse(null);
 
-        validarEncerramentoLeilao(leilao,maiorLance);
+        finalizarLeilao(leilao, maiorLance);
 
         leilao.setStatusLeilao(StatusLeilao.ENCERRADO);
         leilaoRepository.save(leilao);
@@ -238,6 +233,22 @@ public class LeilaoService {
         }
     }
 
+    private void finalizarLeilao(Leilao leilao, Lance maiorLance) {
+        Item item = leilao.getItem();
+
+        if(maiorLance == null) {
+            leilao.setVencedor(null);
+            item.setStatusItem(StatusItem.DISPONIVEL);
+            return;
+        }
+
+        Usuario vencedor = maiorLance.getUsuario();
+        leilao.setVencedor(vencedor);
+
+        item.setStatusItem(StatusItem.VENDIDO);
+        item.setProprietario(vencedor);
+    }
+
     public void validarEncerramentoLeilao(Leilao leilao, Lance maiorLance)
     {
         Item item = leilao.getItem();
@@ -260,9 +271,9 @@ public class LeilaoService {
 
     public void validarAberturaLeilao(Leilao leilao)
     {
-        if(leilao.getStatusLeilao() != StatusLeilao.ABERTO)
+        if(leilao.getStatusLeilao() != StatusLeilao.AGENDADO)
         {
-            throw new LeilaoAbertoException();
+            throw new StatusDeLeilaoIncorretoException("Apenas leilões com status AGENDADO podem ser abertos");
         }
 
         if(LocalDateTime.now().isBefore(leilao.getDataInicio()))
