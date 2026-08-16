@@ -17,7 +17,6 @@ import LeilaoOnlineJUnit.infra.exception.item.ItemEmLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVendidoException;
 import LeilaoOnlineJUnit.infra.exception.item.ItemVinculadoAoLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
-import LeilaoOnlineJUnit.repository.ItemRepository;
 import LeilaoOnlineJUnit.repository.LanceRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import jakarta.transaction.Transactional;
@@ -129,6 +128,8 @@ public class LeilaoService {
         leilao.setStatusLeilao(StatusLeilao.CANCELADO);
         leilao.getItem().setStatusItem(StatusItem.DISPONIVEL);
 
+        this.leilaoRepository.save(leilao);
+
         return LeilaoResponseDTO.fromLeilao(leilao);
     }
 
@@ -144,7 +145,7 @@ public class LeilaoService {
 
         Lance maiorLance = lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao).orElse(null);
 
-        finalizarLeilao(leilao, maiorLance);
+        validarEncerramentoLeilao(leilao, maiorLance);
 
         leilao.setStatusLeilao(StatusLeilao.ENCERRADO);
         leilaoRepository.save(leilao);
@@ -204,7 +205,7 @@ public class LeilaoService {
         }
 
         return leilaoIdCriador.stream().map(LeilaoResponseDTO::fromLeilao).toList();
-    } 
+    }
 
     public List<LeilaoResponseDTO> realizarBuscaPorDataInicial(LocalDate dataInicial, LocalDate dataFinal)
     {
@@ -233,10 +234,12 @@ public class LeilaoService {
         }
     }
 
-    private void finalizarLeilao(Leilao leilao, Lance maiorLance) {
+    private void validarEncerramentoLeilao(Leilao leilao, Lance maiorLance) {
+
         Item item = leilao.getItem();
 
-        if(maiorLance == null) {
+        if(maiorLance == null)
+        {
             leilao.setVencedor(null);
             item.setStatusItem(StatusItem.DISPONIVEL);
             return;
@@ -249,27 +252,8 @@ public class LeilaoService {
         item.setProprietario(vencedor);
     }
 
-    public void validarEncerramentoLeilao(Leilao leilao, Lance maiorLance)
-    {
-        Item item = leilao.getItem();
 
-        if(maiorLance!=null)
-        {
-            Usuario vencedor = leilao.getVencedor();
-
-            leilao.setVencedor(vencedor);
-
-            item.setStatusItem(StatusItem.VENDIDO);
-            item.setLeilao(leilao);
-        }
-        else
-        {
-            leilao.setVencedor(null);
-            item.setStatusItem(StatusItem.DISPONIVEL);
-        }
-    }
-
-    public void validarAberturaLeilao(Leilao leilao)
+    private void validarAberturaLeilao(Leilao leilao)
     {
         if(leilao.getStatusLeilao() != StatusLeilao.AGENDADO)
         {
@@ -282,7 +266,7 @@ public class LeilaoService {
         }
     }
 
-    public List<LeilaoResponseDTO> realizarBuscaEntreDatas(LocalDate dataInicial, LocalDate dataFinal, BiFunction<LocalDateTime, LocalDateTime, List<Leilao>> leilao)
+    private List<LeilaoResponseDTO> realizarBuscaEntreDatas(LocalDate dataInicial, LocalDate dataFinal, BiFunction<LocalDateTime, LocalDateTime, List<Leilao>> leilao)
     {
         if(dataFinal.isBefore(dataInicial))
         {
@@ -300,7 +284,7 @@ public class LeilaoService {
         return  leiloes.stream().map(LeilaoResponseDTO::fromLeilao).toList();
     }
 
-    public void validarDatasLeilao(LeilaoRequestDTO  leilaoRequestDTO)
+    private void validarDatasLeilao(LeilaoRequestDTO  leilaoRequestDTO)
     {
         if (leilaoRequestDTO.dataInicio().isAfter(leilaoRequestDTO.dataFim())) {
             throw new DataIncorretaException();
@@ -315,11 +299,16 @@ public class LeilaoService {
         }
     }
 
-    public void validarCriadorItemLeilao(Usuario criador, Item item)
+    private void validarCriadorItemLeilao(Usuario criador, Item item)
     {
         if(criador.getStatusUsuario().equals(StatusUsuario.BLOQUEADO))
         {
             throw new UsuarioBloqueadoException("usuario bloqueado não pode fazer agendamento de leilão");
+        }
+
+        if(!item.getProprietario().getId().equals(criador.getId()))
+        {
+            throw new UsuarioNaoProprietarioException();
         }
 
         if(item.getStatusItem().equals(StatusItem.EM_LEILAO))
