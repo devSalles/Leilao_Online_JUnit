@@ -5,6 +5,6 @@ public class PrimeiroLanceInvaidoException extends RuntimeException {
         super(message);
     }
     public PrimeiroLanceInvaidoException() {
-        super("Valor do primeiro lance deve ser maior que valor do item");
+        super("Valor do primeiro lance deve ser maior ou igual que valor inicial do item");
     }
 }

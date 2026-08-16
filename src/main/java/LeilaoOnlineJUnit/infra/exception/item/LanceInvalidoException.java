@@ -5,6 +5,6 @@ public class LanceInvalidoException extends RuntimeException {
         super(message);
     }
     public LanceInvalidoException() {
-        super("O novo lance deve ser maior que o maior lance registrado");
+        super("O lance deve ser maior que o lance atual");
     }
 }
