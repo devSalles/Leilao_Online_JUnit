@@ -1,6 +1,5 @@
 package LeilaoOnlineJUnit.service;
 
-
 import LeilaoOnlineJUnit.Enum.StatusLeilao;
 import LeilaoOnlineJUnit.Enum.StatusUsuario;
 import LeilaoOnlineJUnit.dto.lance.LanceRequestDTO;
@@ -8,6 +7,8 @@ import LeilaoOnlineJUnit.dto.lance.LanceResponseDTO;
 import LeilaoOnlineJUnit.entity.Lance;
 import LeilaoOnlineJUnit.entity.Leilao;
 import LeilaoOnlineJUnit.entity.Usuario;
+import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
+import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.item.LanceInvalidoException;
 import LeilaoOnlineJUnit.infra.exception.item.LeilaoNaoAbertoException;
 import LeilaoOnlineJUnit.infra.exception.item.PrimeiroLanceInvaidoException;
@@ -18,6 +19,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -42,6 +44,32 @@ public class LanceService {
 
         lanceRepository.save(lanceSalvar);
         return LanceResponseDTO.fromLance(lanceSalvar);
+    }
+
+    public LanceResponseDTO buscarLance(Long id)
+    {
+        Lance lance = lanceRepository.findById(id).orElseThrow(()-> new IdNaoEncontradoException("ID de lance não encontrado"));
+        return  LanceResponseDTO.fromLance(lance);
+    }
+
+    public List<LanceResponseDTO> buscarLancesPorLeilao(Long idLeilao)
+    {
+        List<Lance> leilaoId = lanceRepository.findByLeilaoId(idLeilao);
+        if(leilaoId.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro foi encontrado");
+        }
+        return leilaoId.stream().map(LanceResponseDTO::fromLance).toList();
+    }
+
+    public List<LanceResponseDTO> listarLances()
+    {
+        List<Lance> lances = lanceRepository.findAll();
+        if(lances.isEmpty())
+        {
+            throw new NenhumRegistroException("Nenhum registro foi encontrado");
+        }
+        return lances.stream().map(LanceResponseDTO::fromLance).toList();
     }
 
     //--- Metodos Auxiliares ---

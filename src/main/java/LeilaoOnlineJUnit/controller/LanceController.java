@@ -8,12 +8,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/lance")
@@ -25,7 +23,24 @@ public class LanceController {
     @PostMapping("/realizar-lance")
     public ResponseEntity<LanceResponseDTO> controllerRealizarLance(@RequestBody @Valid LanceRequestDTO lanceRequestDTO) {
         LanceResponseDTO response = lanceService.realizarLance(lanceRequestDTO);
-        URI create = URI.create("/lance/" +response.id());
-        return ResponseEntity.created(create).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/buscar-lance/{id}")
+    public ResponseEntity<LanceResponseDTO> controllerBuscarLance(@PathVariable Long id) {
+        LanceResponseDTO response = lanceService.buscarLance(id);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/buscar-lances-leilao/{idLeilao}")
+    public ResponseEntity<List<LanceResponseDTO>> controllerBuscarLancesPorLeilao(@PathVariable Long idLeilao) {
+        List<LanceResponseDTO> response = lanceService.buscarLancesPorLeilao(idLeilao);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/listar-lances")
+    public ResponseEntity<List<LanceResponseDTO>> controllerListarLances() {
+        List<LanceResponseDTO> response = lanceService.listarLances();
+        return ResponseEntity.ok(response);
     }
 }
