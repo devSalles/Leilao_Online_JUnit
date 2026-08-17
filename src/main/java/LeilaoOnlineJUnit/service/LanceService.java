@@ -8,8 +8,10 @@ import LeilaoOnlineJUnit.dto.lance.LanceResponseDTO;
 import LeilaoOnlineJUnit.entity.Lance;
 import LeilaoOnlineJUnit.entity.Leilao;
 import LeilaoOnlineJUnit.entity.Usuario;
+import LeilaoOnlineJUnit.infra.exception.item.LanceInvalidoException;
 import LeilaoOnlineJUnit.infra.exception.item.LeilaoNaoAbertoException;
 import LeilaoOnlineJUnit.infra.exception.item.PrimeiroLanceInvaidoException;
+import LeilaoOnlineJUnit.infra.exception.lance.ValorLanceInvalidoException;
 import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
 import LeilaoOnlineJUnit.repository.LanceRepository;
 import jakarta.transaction.Transactional;
@@ -26,12 +28,21 @@ public class LanceService {
     private final UsuarioService usuarioService;
     private final LeilaoService leilaoService;
 
-//    @Transactional
-//    public LanceResponseDTO realizarLance(LanceRequestDTO lanceRequestDTO)
-//    {
-//        Usuario participante = usuarioService.buscarIdUsuario(lanceRequestDTO.idUsuario());
-//        Leilao leilao = leilaoService;
-//    }
+    @Transactional
+    public LanceResponseDTO realizarLance(LanceRequestDTO lanceRequestDTO)
+    {
+        Usuario participante = usuarioService.buscarIdUsuario(lanceRequestDTO.idUsuario());
+        Leilao leilao = leilaoService.buscarLeilaoID(lanceRequestDTO.idLeilao());
+
+        validarUsuario(participante);
+        validarLeilao(leilao);
+        validarValorLance(lanceRequestDTO.valorLance(),leilao);
+
+        Lance lanceSalvar = lanceRequestDTO.toLance(participante,leilao);
+
+        lanceRepository.save(lanceSalvar);
+        return LanceResponseDTO.fromLance(lanceSalvar);
+    }
 
     //--- Metodos Auxiliares ---
 
@@ -53,6 +64,12 @@ public class LanceService {
 
     private void validarValorLance(BigDecimal valorLance, Leilao leilao)
     {
+
+        if(valorLance ==null || valorLance.compareTo(BigDecimal.ZERO) <= 0)
+        {
+            throw new ValorLanceInvalidoException();
+        }
+
         Optional<Lance> maiorLance = lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao);
 
         if(maiorLance.isEmpty())
@@ -65,9 +82,9 @@ public class LanceService {
             return;
         }
 
-        if(valorLance.compareTo(leilao.getItem().getValorInicial())<=0)
+        if(valorLance.compareTo(maiorLance.get().getValor())<=0)
         {
-            throw new PrimeiroLanceInvaidoException();
+            throw new LanceInvalidoException();
         }
     }
 }
