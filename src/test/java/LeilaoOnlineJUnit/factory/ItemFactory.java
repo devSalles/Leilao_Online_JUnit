@@ -6,7 +6,7 @@ import LeilaoOnlineJUnit.entity.Usuario;
 
 public class ItemFactory {
 
-    public Item criarItemPronto(Usuario proprietario)
+    public static Item criarItemPronto(Usuario proprietario)
     {
         Item item = new Item();
 
@@ -20,7 +20,7 @@ public class ItemFactory {
         return item;
     }
 
-    public Item criarItemPersonalizado(Long id, String nome, String descricao, String categoria,
+    public static Item criarItemPersonalizado(Long id, String nome, String descricao, String categoria,
                                        StatusItem statusItem, Usuario proprietario)
     {
         Item item = new Item();

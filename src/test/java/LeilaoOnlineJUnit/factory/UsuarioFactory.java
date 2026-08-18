@@ -5,7 +5,7 @@ import LeilaoOnlineJUnit.entity.Usuario;
 
 public class UsuarioFactory {
 
-    public Usuario criarUsuarioPronto(){
+    public static Usuario criarUsuarioPronto(){
 
         Usuario usuario = new Usuario();
 
@@ -18,7 +18,7 @@ public class UsuarioFactory {
         return usuario;
     }
 
-    public Usuario criarUsuarioPersonalizado(Long id, String nome, String cpf)
+    public static Usuario criarUsuarioPersonalizado(Long id, String nome, String cpf)
     {
         Usuario usuario = new Usuario();
 
