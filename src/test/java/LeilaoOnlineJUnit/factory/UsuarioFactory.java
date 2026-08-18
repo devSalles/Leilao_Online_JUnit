@@ -2,7 +2,6 @@ package LeilaoOnlineJUnit.factory;
 
 import LeilaoOnlineJUnit.Enum.StatusUsuario;
 import LeilaoOnlineJUnit.entity.Usuario;
-import io.swagger.v3.oas.models.media.UUIDSchema;
 
 public class UsuarioFactory {
 
