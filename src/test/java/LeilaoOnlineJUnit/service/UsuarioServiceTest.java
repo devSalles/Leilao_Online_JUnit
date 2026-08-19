@@ -5,6 +5,7 @@ import LeilaoOnlineJUnit.dto.usuario.UsuarioResponseDTO;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioUpdateRequestDTO;
 import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
+import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.participante.CpfRepetidoException;
 import LeilaoOnlineJUnit.infra.exception.participante.EmailRepetidoException;
 import LeilaoOnlineJUnit.repository.ItemRepository;
@@ -132,5 +133,38 @@ public class UsuarioServiceTest {
         verify(usuarioRepository).findById(usuario.getId());
     }
 
+    // --- GET ID ---
 
+    @Test
+    void buscarUsuarioPorId()
+    {
+        //Arrange
+        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+
+        //Act
+        UsuarioResponseDTO usuarioResponse = usuarioService.exibirPorId(usuario.getId());
+
+        //Assert
+        assertEquals("Bernardo",usuarioResponse.nome());
+        assertEquals("14282943688",usuarioResponse.cpf());
+        assertEquals("bernardo89@gmail.com",usuarioResponse.email());
+
+        verify(usuarioRepository,times(1)).findById(usuario.getId());
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoIdUsuarioNaoEncontrado()
+    {
+        //Arrange
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.empty());
+
+        //Act
+        IdNaoEncontradoException idNaoEncontradoException = assertThrows(IdNaoEncontradoException.class,()-> usuarioService.exibirPorId(1L));
+        assertEquals("Usuário não encontrado",idNaoEncontradoException.getMessage());
+
+        //Assert
+        verify(usuarioRepository,times(1)).findById(1L);
+    }
 }
