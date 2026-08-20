@@ -7,6 +7,7 @@ import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
+import LeilaoOnlineJUnit.infra.exception.participante.CpfNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.participante.CpfRepetidoException;
 import LeilaoOnlineJUnit.infra.exception.participante.EmailRepetidoException;
 import LeilaoOnlineJUnit.repository.ItemRepository;
@@ -149,11 +150,9 @@ public class UsuarioServiceTest {
         UsuarioResponseDTO usuarioResponse = usuarioService.exibirPorId(usuario.getId());
 
         //Assert
-        assertEquals("Bernardo",usuarioResponse.nome());
-        assertEquals("14282943688",usuarioResponse.cpf());
-        assertEquals("bernardo89@gmail.com",usuarioResponse.email());
-
         verify(usuarioRepository,times(1)).findById(usuario.getId());
+
+        validarUsuario(usuario,usuarioResponse);
     }
 
     @Test
@@ -170,7 +169,7 @@ public class UsuarioServiceTest {
         verify(usuarioRepository,times(1)).findById(1L);
     }
 
-    //---Listar Todos ---
+    //---GET ALL ---
 
     @Test
     void pesquisarTodosOsUsarios()
@@ -198,5 +197,50 @@ public class UsuarioServiceTest {
         assertThrows(NenhumRegistroException.class,()-> usuarioService.exibirTodosUsuarios());
 
         verify(usuarioRepository).findAll();
+    }
+
+    //--- GET CPF ---
+
+    @Test
+    void buscarPorCPF()
+    {
+        String cpf = "14282943688";
+        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+
+        when(usuarioRepository.findByCpf(cpf)).thenReturn(usuario);
+
+        UsuarioResponseDTO usuarioCpfResponse = usuarioService.exibirPorCpf(cpf);
+        assertNotNull(usuarioCpfResponse);
+        assertEquals("14282943688",usuarioCpfResponse.cpf());
+
+        verify(usuarioRepository).findByCpf(usuario.getCpf());
+
+        validarUsuario(usuario,usuarioCpfResponse);
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoCpfNaoEncontrado()
+    {
+        String cpf = "14282943688";
+
+        when(usuarioRepository.findByCpf(cpf)).thenReturn(null);
+
+        CpfNaoEncontradoException exception = assertThrows(CpfNaoEncontradoException.class,()-> usuarioService.exibirPorCpf(cpf));
+        assertEquals("Cpf não encontrado",exception.getMessage());
+
+
+        verify(usuarioRepository).findByCpf(cpf);
+    }
+
+
+    // --- METODO AUXILIAR ---
+
+    public void validarUsuario(Usuario usuario, UsuarioResponseDTO usuarioResponseDTO)
+    {
+        assertAll(()-> assertNotNull(usuarioResponseDTO),
+                ()-> assertEquals(usuario.getId(),usuarioResponseDTO.id()),
+                ()-> assertEquals(usuario.getNome(),usuarioResponseDTO.nome()),
+                ()-> assertEquals(usuario.getEmail(),usuarioResponseDTO.email())
+        );
     }
 }
