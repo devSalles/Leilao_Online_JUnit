@@ -6,6 +6,7 @@ import LeilaoOnlineJUnit.dto.usuario.UsuarioUpdateRequestDTO;
 import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
+import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.participante.CpfRepetidoException;
 import LeilaoOnlineJUnit.infra.exception.participante.EmailRepetidoException;
 import LeilaoOnlineJUnit.repository.ItemRepository;
@@ -17,10 +18,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -166,5 +168,35 @@ public class UsuarioServiceTest {
 
         //Assert
         verify(usuarioRepository,times(1)).findById(1L);
+    }
+
+    //---Listar Todos ---
+
+    @Test
+    void pesquisarTodosOsUsarios()
+    {
+        Usuario pedro = UsuarioFactory.criarUsuarioPersonalizado(1L,"pedro","60687400058");
+        Usuario carlos = UsuarioFactory.criarUsuarioPersonalizado(2L,"carlos","18695885097");
+
+        when(usuarioRepository.findAll()).thenReturn(List.of(pedro,carlos));
+
+        List<UsuarioResponseDTO> usuarioResponse = usuarioService.exibirTodosUsuarios();
+
+        assertNotNull(usuarioResponse);
+        assertEquals(2,usuarioResponse.size());
+        assertEquals("pedro",usuarioResponse.get(0).nome());
+        assertEquals("carlos",usuarioResponse.get(1).nome());
+
+        verify(usuarioRepository).findAll();
+    }
+
+    @Test
+    void lancarExcecaoQuandoListaEstiverVazia()
+    {
+        when(usuarioRepository.findAll()).thenReturn(List.of());
+
+        assertThrows(NenhumRegistroException.class,()-> usuarioService.exibirTodosUsuarios());
+
+        verify(usuarioRepository).findAll();
     }
 }
