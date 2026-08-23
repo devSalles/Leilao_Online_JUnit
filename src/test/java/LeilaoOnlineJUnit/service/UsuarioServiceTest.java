@@ -1,5 +1,6 @@
 package LeilaoOnlineJUnit.service;
 
+import LeilaoOnlineJUnit.Enum.StatusUsuario;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioRequestDTO;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioResponseDTO;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioUpdateRequestDTO;
@@ -9,6 +10,7 @@ import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.infra.exception.participante.CpfNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.participante.CpfRepetidoException;
+import LeilaoOnlineJUnit.infra.exception.participante.EmailNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.participante.EmailRepetidoException;
 import LeilaoOnlineJUnit.repository.ItemRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
@@ -174,13 +176,17 @@ public class UsuarioServiceTest {
     @Test
     void pesquisarTodosOsUsarios()
     {
+        //Arrange
         Usuario pedro = UsuarioFactory.criarUsuarioPersonalizado(1L,"pedro","60687400058");
         Usuario carlos = UsuarioFactory.criarUsuarioPersonalizado(2L,"carlos","18695885097");
 
         when(usuarioRepository.findAll()).thenReturn(List.of(pedro,carlos));
 
+        //Act
+
         List<UsuarioResponseDTO> usuarioResponse = usuarioService.exibirTodosUsuarios();
 
+        //Assert
         assertNotNull(usuarioResponse);
         assertEquals(2,usuarioResponse.size());
         assertEquals("pedro",usuarioResponse.get(0).nome());
@@ -192,10 +198,13 @@ public class UsuarioServiceTest {
     @Test
     void lancarExcecaoQuandoListaEstiverVazia()
     {
+        //Arrange
         when(usuarioRepository.findAll()).thenReturn(List.of());
 
+        //Act
         assertThrows(NenhumRegistroException.class,()-> usuarioService.exibirTodosUsuarios());
 
+        //Assert
         verify(usuarioRepository).findAll();
     }
 
@@ -204,12 +213,16 @@ public class UsuarioServiceTest {
     @Test
     void buscarPorCPF()
     {
+        //Arrange
         String cpf = "14282943688";
         Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
         when(usuarioRepository.findByCpf(cpf)).thenReturn(usuario);
 
+        //Act
         UsuarioResponseDTO usuarioCpfResponse = usuarioService.exibirPorCpf(cpf);
+
+        //Assert
         assertNotNull(usuarioCpfResponse);
         assertEquals("14282943688",usuarioCpfResponse.cpf());
 
@@ -221,17 +234,57 @@ public class UsuarioServiceTest {
     @Test
     void deveLancarExcecaoQuandoCpfNaoEncontrado()
     {
-        String cpf = "14282943688";
+        // Arrange
+        String cpf = "142.829.436-88";
 
-        when(usuarioRepository.findByCpf(cpf)).thenReturn(null);
+        when(usuarioRepository.findByCpf("14282943688")).thenReturn(null);
 
-        CpfNaoEncontradoException exception = assertThrows(CpfNaoEncontradoException.class,()-> usuarioService.exibirPorCpf(cpf));
-        assertEquals("Cpf não encontrado",exception.getMessage());
+        // Act
+        CpfNaoEncontradoException exception = assertThrows(CpfNaoEncontradoException.class, () -> usuarioService.exibirPorCpf(cpf));
 
+        // Assert
+        assertEquals("Cpf não encontrado", exception.getMessage());
 
-        verify(usuarioRepository).findByCpf(cpf);
+        verify(usuarioRepository).findByCpf("14282943688");
     }
 
+    //--- GET EMAIL ---
+
+    @Test
+    void realizarBuscarPorEmail()
+    {
+        //Arrange
+        String email = "bernardo89@gmail.com";
+        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+
+        when(usuarioRepository.findByEmail(email)).thenReturn(usuario);
+
+        //Act
+        UsuarioResponseDTO usuarioResponse = usuarioService.exibirPorEmail(email);
+
+        //Assert
+        validarUsuario(usuario,usuarioResponse);
+
+        verify(usuarioRepository).findByEmail(email);
+    }
+
+    @Test
+    void lancarExcecaoQuandoEmailNaoEncontrado()
+    {
+        //Arrange
+        String email = "bernardo@gmail.com";
+
+        when(usuarioRepository.findByEmail(email)).thenReturn(null);
+
+        //Act
+        EmailNaoEncontradoException exception = assertThrows(EmailNaoEncontradoException.class,()->usuarioService.exibirPorEmail(email));
+
+        //Assert
+        assertEquals("Email não encontrado",exception.getMessage());
+
+        verify(usuarioRepository).findByEmail(email);
+    }
+    
 
     // --- METODO AUXILIAR ---
 

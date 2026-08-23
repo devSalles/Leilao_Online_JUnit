@@ -125,7 +125,7 @@ public class UsuarioService {
 
         usuarioBloqueado.setStatusUsuario(StatusUsuario.BLOQUEADO);
         this.usuarioRepository.save(usuarioBloqueado);
-        return  UsuarioResponseDTO.fromUsuario(usuarioBloqueado);
+        return UsuarioResponseDTO.fromUsuario(usuarioBloqueado);
     }
 
     public UsuarioResponseDTO desbloquearUsuario(Long idUser)
