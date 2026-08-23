@@ -195,4 +195,11 @@ public class HandlerException {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.BAD_REQUEST,ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
     }
+
+    @ExceptionHandler(UsuarioProprietarioException.class)
+    public ResponseEntity<MessageRestError> UsuarioProprietarioException(UsuarioProprietarioException ex)
+    {
+        MessageRestError messageRestError = new MessageRestError(HttpStatus.CONFLICT,ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
+    }
 }
