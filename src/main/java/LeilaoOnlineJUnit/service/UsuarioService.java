@@ -118,7 +118,7 @@ public class UsuarioService {
 
         if(usuarioBloqueado.getStatusUsuario().equals(StatusUsuario.BLOQUEADO))
         {
-            throw new UsuarioBloqueadoException("Usuario já bloqueado");
+            throw new UsuarioBloqueadoException("Usuario já está bloqueado");
         }
 
         usuarioBloqueado.setStatusUsuario(StatusUsuario.BLOQUEADO);

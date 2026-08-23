@@ -6,12 +6,7 @@ import LeilaoOnlineJUnit.dto.usuario.UsuarioResponseDTO;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioUpdateRequestDTO;
 import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
-import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
-import LeilaoOnlineJUnit.infra.exception.CpfNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.CpfRepetidoException;
-import LeilaoOnlineJUnit.infra.exception.EmailNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.EmailRepetidoException;
+import LeilaoOnlineJUnit.infra.exception.*;
 import LeilaoOnlineJUnit.repository.ItemRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import LeilaoOnlineJUnit.repository.UsuarioRepository;
@@ -153,7 +148,7 @@ public class UsuarioServiceTest {
         //Assert
         verify(usuarioRepository,times(1)).findById(usuario.getId());
 
-        validarUsuario(usuario,usuarioResponse);
+        validarDadosUsuario(usuario,usuarioResponse);
     }
 
     @Test
@@ -176,8 +171,8 @@ public class UsuarioServiceTest {
     void pesquisarTodosOsUsarios()
     {
         //Arrange
-        Usuario pedro = UsuarioFactory.criarUsuarioPersonalizado(1L,"pedro","60687400058");
-        Usuario carlos = UsuarioFactory.criarUsuarioPersonalizado(2L,"carlos","18695885097");
+        Usuario pedro = UsuarioFactory.criarUsuarioPersonalizado(1L,"pedro","60687400058",StatusUsuario.ATIVO);
+        Usuario carlos = UsuarioFactory.criarUsuarioPersonalizado(2L,"carlos","18695885097",StatusUsuario.ATIVO);
 
         when(usuarioRepository.findAll()).thenReturn(List.of(pedro,carlos));
 
@@ -227,7 +222,7 @@ public class UsuarioServiceTest {
 
         verify(usuarioRepository).findByCpf(usuario.getCpf());
 
-        validarUsuario(usuario,usuarioCpfResponse);
+        validarDadosUsuario(usuario,usuarioCpfResponse);
     }
 
     @Test
@@ -262,7 +257,7 @@ public class UsuarioServiceTest {
         UsuarioResponseDTO usuarioResponse = usuarioService.exibirPorEmail(email);
 
         //Assert
-        validarUsuario(usuario,usuarioResponse);
+        validarDadosUsuario(usuario,usuarioResponse);
 
         verify(usuarioRepository).findByEmail(email);
     }
@@ -324,9 +319,48 @@ public class UsuarioServiceTest {
         verify(usuarioRepository).findByStatusUsuario(statusUsuario);
     }
 
+    // --- BLOQUEAR USUÁRIO ---
+
+    @Test
+    void deveBloquearUsuarioAtivo()
+    {
+        // Arrange
+        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+
+        // Act
+        UsuarioResponseDTO usuarioResponseDTO = usuarioService.bloquearUsuario(usuario.getId());
+
+        // Assert
+        validarDadosUsuario(usuario, usuarioResponseDTO);
+
+        assertEquals(StatusUsuario.BLOQUEADO, usuario.getStatusUsuario());
+
+        verify(usuarioRepository).findById(usuario.getId());
+        verify(usuarioRepository).save(usuario);
+    }
+
+    @Test
+    void lancarExcecaoQuandoUsuarioJaEstiverBloqueado()
+    {
+        //Arrange
+        Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L,"Bernardo","18968230099",StatusUsuario.BLOQUEADO);
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+
+        //Act
+        UsuarioBloqueadoException exception = assertThrows(UsuarioBloqueadoException.class,()->usuarioService.bloquearUsuario(usuario.getId()));
+
+        //Assert
+        assertEquals("Usuario já está bloqueado",exception.getMessage());
+
+        verify(usuarioRepository).findById(usuario.getId());
+    }
+
     // --- METODO AUXILIAR ---
 
-    public void validarUsuario(Usuario usuario, UsuarioResponseDTO usuarioResponseDTO)
+    public void validarDadosUsuario(Usuario usuario, UsuarioResponseDTO usuarioResponseDTO)
     {
         assertAll(()-> assertNotNull(usuarioResponseDTO),
                 ()-> assertEquals(usuario.getId(),usuarioResponseDTO.id()),

@@ -18,13 +18,14 @@ public class UsuarioFactory {
         return usuario;
     }
 
-    public static Usuario criarUsuarioPersonalizado(Long id, String nome, String cpf)
+    public static Usuario criarUsuarioPersonalizado(Long id, String nome, String cpf,StatusUsuario statusUsuario)
     {
         Usuario usuario = new Usuario();
 
         usuario.setId(id);
         usuario.setNome(nome);
         usuario.setCpf(cpf);
+        usuario.setStatusUsuario(statusUsuario);
         usuario.setEmail(nome.toLowerCase().replace(" ","") + "@gmail.com");
 
         return usuario;
