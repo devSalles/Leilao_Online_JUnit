@@ -1,10 +1,13 @@
 package LeilaoOnlineJUnit.service;
 
+import LeilaoOnlineJUnit.Enum.StatusLeilao;
 import LeilaoOnlineJUnit.Enum.StatusUsuario;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioRequestDTO;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioResponseDTO;
 import LeilaoOnlineJUnit.dto.usuario.UsuarioUpdateRequestDTO;
+import LeilaoOnlineJUnit.entity.Leilao;
 import LeilaoOnlineJUnit.entity.Usuario;
+import LeilaoOnlineJUnit.factory.LeilaoFactory;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.*;
 import LeilaoOnlineJUnit.repository.ItemRepository;
@@ -394,6 +397,64 @@ public class UsuarioServiceTest {
 
         //Assert
         verify(usuarioRepository).findById(usuario.getId());
+    }
+
+    // --- REMOVER USUÁRIO ---
+
+    @Test
+    void realizarExclusaoDeUsuario()
+    {
+        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+
+        UsuarioResponseDTO response = usuarioService.removerUsuario(usuario.getId());
+        validarDadosUsuario(usuario, response);
+
+        verify(usuarioRepository).findById(usuario.getId());
+        verify(usuarioRepository,times(1)).delete(usuario);
+        verify(usuarioRepository).delete(any(Usuario.class));
+    }
+
+    @Test
+    void verificarSeUsuarioPossuiItemVinculado()
+    {
+        //Arrange
+        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+        when(itemRepository.existsByProprietarioIdAndLeilaoIdIsNotNull(usuario.getId())).thenReturn(true);
+
+        //Act
+        PossuiItemEmLeilaoException exception = assertThrows(PossuiItemEmLeilaoException.class,()->usuarioService.removerUsuario(usuario.getId()));
+
+        //Assert
+        assertEquals("Usuário possui item vinculados a leilão",exception.getMessage());
+
+        verify(usuarioRepository).findById(usuario.getId());
+        verify(itemRepository).existsByProprietarioIdAndLeilaoIdIsNotNull(usuario.getId());
+        verify(usuarioRepository,never()).delete(usuario);
+    }
+
+    @Test
+    void verificarSeUsuarioPossuiPossuiLeilaoAtivo()
+    {
+        //Arrange
+        Usuario criadorLeilao = UsuarioFactory.criarUsuarioPronto();
+
+
+        when(usuarioRepository.findById(criadorLeilao.getId())).thenReturn(Optional.of(criadorLeilao));
+        when(leilaoRepository.existsByCriadorIdAndStatusLeilaoIn(criadorLeilao.getId(), List.of(StatusLeilao.AGENDADO,StatusLeilao.ABERTO))).thenReturn(true);
+
+        //Act
+        PossuiLeilaoAtivoException exception = assertThrows(PossuiLeilaoAtivoException.class,()->usuarioService.removerUsuario(criadorLeilao.getId()));
+
+        //Assert
+        assertEquals("Usuário possui leilão ativo",exception.getMessage());
+
+        verify(usuarioRepository).findById(criadorLeilao.getId());
+        verify(leilaoRepository).existsByCriadorIdAndStatusLeilaoIn(criadorLeilao.getId(),List.of(StatusLeilao.AGENDADO,StatusLeilao.ABERTO)) ;
+        verify(usuarioRepository,never()).delete(criadorLeilao);
     }
 
     // --- METODO AUXILIAR ---

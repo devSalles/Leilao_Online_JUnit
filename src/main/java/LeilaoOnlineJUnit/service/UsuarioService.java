@@ -138,7 +138,7 @@ public class UsuarioService {
 
         usuarioDesbloqueado.setStatusUsuario(StatusUsuario.ATIVO);
         this.usuarioRepository.save(usuarioDesbloqueado);
-        return  UsuarioResponseDTO.fromUsuario(usuarioDesbloqueado);
+        return UsuarioResponseDTO.fromUsuario(usuarioDesbloqueado);
     }
 
     @Transactional
@@ -152,14 +152,14 @@ public class UsuarioService {
             throw new  PossuiItemEmLeilaoException();
         }
 
-        boolean possuiLeilaoAtivo  = leilaoRepository.existsByCriadorIdAndStatusLeilaoIn(idUsuario, List.of(StatusLeilao.AGENDADO,StatusLeilao.ABERTO));
-        if(possuiLeilaoAtivo )
+        boolean possuiLeilaoAtivo = leilaoRepository.existsByCriadorIdAndStatusLeilaoIn(idUsuario, List.of(StatusLeilao.AGENDADO,StatusLeilao.ABERTO));
+        if(possuiLeilaoAtivo)
         {
             throw new PossuiLeilaoAtivoException();
         }
 
         usuarioRepository.delete(usuarioRemover);
-        return  UsuarioResponseDTO.fromUsuario(usuarioRemover);
+        return UsuarioResponseDTO.fromUsuario(usuarioRemover);
     }
 
     // --- METODO AUXILIAR ---
