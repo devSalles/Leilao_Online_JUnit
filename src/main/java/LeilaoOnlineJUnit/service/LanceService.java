@@ -7,13 +7,7 @@ import LeilaoOnlineJUnit.dto.lance.LanceResponseDTO;
 import LeilaoOnlineJUnit.entity.Lance;
 import LeilaoOnlineJUnit.entity.Leilao;
 import LeilaoOnlineJUnit.entity.Usuario;
-import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
-import LeilaoOnlineJUnit.infra.exception.LanceInvalidoException;
-import LeilaoOnlineJUnit.infra.exception.LeilaoNaoAbertoException;
-import LeilaoOnlineJUnit.infra.exception.PrimeiroLanceInvaidoException;
-import LeilaoOnlineJUnit.infra.exception.ValorLanceInvalidoException;
-import LeilaoOnlineJUnit.infra.exception.UsuarioBloqueadoException;
+import LeilaoOnlineJUnit.infra.exception.*;
 import LeilaoOnlineJUnit.repository.LanceRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +30,7 @@ public class LanceService {
         Usuario participante = usuarioService.buscarIdUsuario(lanceRequestDTO.idUsuario());
         Leilao leilao = leilaoService.buscarLeilaoID(lanceRequestDTO.idLeilao());
 
-        validarUsuario(participante);
+        validarUsuario(participante,leilao);
         validarLeilao(leilao);
         validarValorLance(lanceRequestDTO.valorLance(),leilao);
 
@@ -82,9 +76,14 @@ public class LanceService {
         }
     }
 
-    private void validarUsuario(Usuario usuario)
+    private void validarUsuario(Usuario participante,Leilao leilao)
     {
-        if(usuario.getStatusUsuario() != StatusUsuario.ATIVO)
+        if(participante.getId().equals(leilao.getCriador().getId()))
+        {
+            throw new UsuarioProprietarioException();
+        }
+
+        if(participante.getStatusUsuario() != StatusUsuario.ATIVO)
         {
             throw  new UsuarioBloqueadoException("Usuário bloqueado não pode realizar novos lances");
         }
