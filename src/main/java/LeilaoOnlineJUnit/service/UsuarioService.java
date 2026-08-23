@@ -111,6 +111,7 @@ public class UsuarioService {
         return usuarioStatus.stream().map(UsuarioResponseDTO::fromUsuario).toList();
     }
 
+    @Transactional
     public UsuarioResponseDTO bloquearUsuario(Long idUser)
     {
         Usuario usuarioBloqueado = buscarIdUsuario(idUser);
@@ -125,6 +126,7 @@ public class UsuarioService {
         return UsuarioResponseDTO.fromUsuario(usuarioBloqueado);
     }
 
+    @Transactional
     public UsuarioResponseDTO desbloquearUsuario(Long idUser)
     {
         Usuario usuarioDesbloqueado = buscarIdUsuario(idUser);
