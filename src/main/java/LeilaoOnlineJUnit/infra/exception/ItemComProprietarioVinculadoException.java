@@ -1,4 +1,4 @@
-package LeilaoOnlineJUnit.infra.exception.item;
+package LeilaoOnlineJUnit.infra.exception;
 
 public class ItemComProprietarioVinculadoException extends RuntimeException {
     public ItemComProprietarioVinculadoException(String message) {

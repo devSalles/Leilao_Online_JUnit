@@ -1,4 +1,4 @@
-package LeilaoOnlineJUnit.infra.exception.participante;
+package LeilaoOnlineJUnit.infra.exception;
 
 public class PossuiItemEmLeilaoException extends RuntimeException {
     public PossuiItemEmLeilaoException(String message) {

@@ -1,4 +1,4 @@
-package LeilaoOnlineJUnit.infra.exception.participante;
+package LeilaoOnlineJUnit.infra.exception;
 
 public class EmailNaoEncontradoException extends RuntimeException {
     public EmailNaoEncontradoException(String message) {

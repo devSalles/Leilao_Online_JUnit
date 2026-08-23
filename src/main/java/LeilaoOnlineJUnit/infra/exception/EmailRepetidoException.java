@@ -1,4 +1,4 @@
-package LeilaoOnlineJUnit.infra.exception.participante;
+package LeilaoOnlineJUnit.infra.exception;
 
 public class EmailRepetidoException extends RuntimeException {
     public EmailRepetidoException(String message) {

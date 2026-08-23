@@ -8,10 +8,10 @@ import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
-import LeilaoOnlineJUnit.infra.exception.participante.CpfNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.participante.CpfRepetidoException;
-import LeilaoOnlineJUnit.infra.exception.participante.EmailNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.participante.EmailRepetidoException;
+import LeilaoOnlineJUnit.infra.exception.CpfNaoEncontradoException;
+import LeilaoOnlineJUnit.infra.exception.CpfRepetidoException;
+import LeilaoOnlineJUnit.infra.exception.EmailNaoEncontradoException;
+import LeilaoOnlineJUnit.infra.exception.EmailRepetidoException;
 import LeilaoOnlineJUnit.repository.ItemRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import LeilaoOnlineJUnit.repository.UsuarioRepository;
@@ -21,7 +21,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -284,7 +283,43 @@ public class UsuarioServiceTest {
 
         verify(usuarioRepository).findByEmail(email);
     }
-    
+
+    //--- GET EMAIL ---
+
+    @Test
+    void buscarPorStatus()
+    {
+        //Arrange
+        StatusUsuario statusUsuario = StatusUsuario.ATIVO;
+        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+
+        when(usuarioRepository.findByStatusUsuario(statusUsuario)).thenReturn(List.of(usuario));
+
+        //Act
+        List<UsuarioResponseDTO> usuarioResponseDTO = usuarioService.exibirPorStatus(statusUsuario);
+
+        //Assert
+        assertNotNull(usuarioResponseDTO);
+        assertEquals(1,usuarioResponseDTO.size());
+
+        assertEquals(usuario.getId(),usuarioResponseDTO.getFirst().id());
+        assertEquals(usuario.getNome(),usuarioResponseDTO.getFirst().nome());
+        assertEquals(usuario.getEmail(),usuarioResponseDTO.getFirst().email());
+        assertEquals(usuario.getCpf(),usuarioResponseDTO.getFirst().cpf());
+        assertEquals(usuario.getStatusUsuario(),usuarioResponseDTO.getFirst().statusUsuario());
+
+        verify(usuarioRepository).findByStatusUsuario(statusUsuario);
+    }
+
+//    @Test
+//    void lancarExcecaoQuandoStatusNaoEncontrado()
+//    {
+//        StatusUsuario statusUsuario = StatusUsuario.BLOQUEADO;
+//
+//        when(usuarioRepository.findByStatusUsuario(statusUsuario)).thenReturn(null);
+//
+//        StatusInc
+//    }
 
     // --- METODO AUXILIAR ---
 

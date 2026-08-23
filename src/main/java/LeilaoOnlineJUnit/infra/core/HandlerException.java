@@ -1,12 +1,8 @@
 package LeilaoOnlineJUnit.infra.core;
 
-import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
-import LeilaoOnlineJUnit.infra.exception.item.*;
-import LeilaoOnlineJUnit.infra.exception.lance.ValorLanceInvalidoException;
-import LeilaoOnlineJUnit.infra.exception.leilao.*;
-import LeilaoOnlineJUnit.infra.exception.participante.UsuarioBloqueadoException;
-import LeilaoOnlineJUnit.infra.exception.participante.*;
+import LeilaoOnlineJUnit.infra.exception.*;
+import LeilaoOnlineJUnit.infra.exception.ValorLanceInvalidoException;
+import LeilaoOnlineJUnit.infra.exception.UsuarioBloqueadoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -52,8 +48,6 @@ public class HandlerException {
         MessageRestError messageRestError = new MessageRestError(HttpStatus.NOT_FOUND,ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(messageRestError);
     }
-
-    // --- Exceções Usuário ---
 
     @ExceptionHandler({
             EmailRepetidoException.class,
@@ -104,8 +98,6 @@ public class HandlerException {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
     }
 
-    // --- Exceções Item ---
-
     @ExceptionHandler(ItemComProprietarioVinculadoException.class)
     public ResponseEntity<MessageRestError> ItemComProprietarioVinculadoException(UsuarioBloqueadoException ex)
     {
@@ -155,9 +147,6 @@ public class HandlerException {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(messageRestError);
     }
 
-
-    // --- Exceções Leilão ---
-
     @ExceptionHandler(DataIncorretaException.class)
     public ResponseEntity<MessageRestError> DataIncorretaException(DataIncorretaException ex)
     {
@@ -200,7 +189,6 @@ public class HandlerException {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(messageRestError);
     }
 
-    // --- LANCE ---
     @ExceptionHandler(ValorLanceInvalidoException.class)
     public ResponseEntity<MessageRestError> ValorLanceInvalidoException(ValorLanceInvalidoException ex)
     {

@@ -1,4 +1,4 @@
-package LeilaoOnlineJUnit.infra.exception.leilao;
+package LeilaoOnlineJUnit.infra.exception;
 
 public class LeilaoAbertoException extends RuntimeException {
     public LeilaoAbertoException(String message) {

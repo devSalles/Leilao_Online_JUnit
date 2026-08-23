@@ -1,4 +1,4 @@
-package LeilaoOnlineJUnit.infra.exception.lance;
+package LeilaoOnlineJUnit.infra.exception;
 
 public class ValorLanceInvalidoException extends RuntimeException {
     public ValorLanceInvalidoException(String message) {
