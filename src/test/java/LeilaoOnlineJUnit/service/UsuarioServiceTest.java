@@ -358,6 +358,44 @@ public class UsuarioServiceTest {
         verify(usuarioRepository).findById(usuario.getId());
     }
 
+    //--- DESBLOQUEAR USUÁRIO
+
+    @Test
+    void deveDesBloquearUsuarioBloqueado()
+    {
+
+        //Arrange
+        Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L,"Bernardo","18968230099",StatusUsuario.BLOQUEADO);
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+
+        //Act
+        UsuarioResponseDTO usuarioResponseDTO = usuarioService.desbloquearUsuario(usuario.getId());
+
+        //Assert
+        validarDadosUsuario(usuario, usuarioResponseDTO);
+
+        assertEquals(StatusUsuario.ATIVO, usuario.getStatusUsuario());
+        verify(usuarioRepository).findById(usuario.getId());
+        verify(usuarioRepository).save(usuario);
+    }
+
+    @Test
+    void lancarExcecaoCasoTenteDesbloquearUsuarioAtivo()
+    {
+        //Arrange
+        Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L,"Bernardo","18968230099",StatusUsuario.ATIVO);
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+
+        //Act
+        UsuarioAtivoException exception = assertThrows(UsuarioAtivoException.class,()->usuarioService.desbloquearUsuario(usuario.getId()));
+        assertEquals("Usuário já está ativo",exception.getMessage());
+
+        //Assert
+        verify(usuarioRepository).findById(usuario.getId());
+    }
+
     // --- METODO AUXILIAR ---
 
     public void validarDadosUsuario(Usuario usuario, UsuarioResponseDTO usuarioResponseDTO)
