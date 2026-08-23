@@ -284,7 +284,7 @@ public class UsuarioServiceTest {
         verify(usuarioRepository).findByEmail(email);
     }
 
-    //--- GET EMAIL ---
+    //--- GET STATUS ---
 
     @Test
     void buscarPorStatus()
@@ -311,15 +311,18 @@ public class UsuarioServiceTest {
         verify(usuarioRepository).findByStatusUsuario(statusUsuario);
     }
 
-//    @Test
-//    void lancarExcecaoQuandoStatusNaoEncontrado()
-//    {
-//        StatusUsuario statusUsuario = StatusUsuario.BLOQUEADO;
-//
-//        when(usuarioRepository.findByStatusUsuario(statusUsuario)).thenReturn(null);
-//
-//        StatusInc
-//    }
+    @Test
+    void lancarExcecaoQuandoStatusNaoEncontrado()
+    {
+        StatusUsuario statusUsuario = StatusUsuario.BLOQUEADO;
+
+        when(usuarioRepository.findByStatusUsuario(statusUsuario)).thenReturn(List.of());
+
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class,()->usuarioService.exibirPorStatus(statusUsuario));
+        assertEquals("Nenhum registro foi encontrado com esse status",exception.getMessage());
+
+        verify(usuarioRepository).findByStatusUsuario(statusUsuario);
+    }
 
     // --- METODO AUXILIAR ---
 
