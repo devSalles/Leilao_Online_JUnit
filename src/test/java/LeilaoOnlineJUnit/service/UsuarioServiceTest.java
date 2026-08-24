@@ -457,7 +457,7 @@ public class UsuarioServiceTest {
 
     // --- METODO AUXILIAR ---
 
-    public void validarDadosUsuario(Usuario usuario, UsuarioResponseDTO usuarioResponseDTO)
+    private void validarDadosUsuario(Usuario usuario, UsuarioResponseDTO usuarioResponseDTO)
     {
         assertAll(()-> assertNotNull(usuarioResponseDTO),
                 ()-> assertEquals(usuario.getId(),usuarioResponseDTO.id()),
