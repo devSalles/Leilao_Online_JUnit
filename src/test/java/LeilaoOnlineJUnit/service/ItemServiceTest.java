@@ -275,6 +275,19 @@ public class ItemServiceTest {
         verify(itemRepository).findByCategoria(item.getCategoria());
     }
 
+    @Test
+    void excecaoQuandoNenhumRegistroEncontrado()
+    {
+        StatusItem statusItem = StatusItem.VENDIDO;
+
+        when(itemRepository.findByStatusItem(statusItem)).thenReturn(List.of());
+
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class,()->itemService.buscarItemPorStatus(statusItem));
+        assertEquals("Nenhum registro de status encontrado", exception.getMessage());
+
+        verify(itemRepository).findByStatusItem(statusItem);
+    }
+
     // --- METODO AUXILIAR ---
 
     private void validarDadosItem(Item item, ItemResponseDTO itemResponseDTO)
