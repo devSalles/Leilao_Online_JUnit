@@ -194,25 +194,30 @@ public class ItemServiceTest {
 
     // --- GET ALL ITEM ---
 
+    // --- GET ALL ITEM ---
+
     @Test
     void listarTodosItensCadastrados()
     {
-        Usuario proprietarioUm = UsuarioFactory.criarUsuarioPersonalizado(1L,"rafael","34257599065", StatusUsuario.ATIVO);
-        Item itemUm = ItemFactory.criarItemPersonalizado(1L,"Bike","perfeito estado","transporte",
-                StatusItem.EM_LEILAO ,proprietarioUm);
+        // Arrange
+        Usuario proprietarioUm = UsuarioFactory.criarUsuarioPersonalizado(1L, "rafael", "34257599065", StatusUsuario.ATIVO);
 
-        Usuario proprietarioDois = UsuarioFactory.criarUsuarioPersonalizado(2L,"watson","83110569000", StatusUsuario.ATIVO);
-        Item itemDois = ItemFactory.criarItemPersonalizado(1L,"Monitor","perfeito estado","periferico",
-                StatusItem.DISPONIVEL ,proprietarioDois);
+        Item itemUm = ItemFactory.criarItemPersonalizado(1L, "Bike", "perfeito estado", "transporte", StatusItem.EM_LEILAO, proprietarioUm);
 
-        when(itemRepository.findAll()).thenReturn(List.of(itemUm,itemDois));
+        Usuario proprietarioDois = UsuarioFactory.criarUsuarioPersonalizado(2L, "watson", "83110569000", StatusUsuario.ATIVO);
 
+        Item itemDois = ItemFactory.criarItemPersonalizado(1L, "Monitor", "perfeito estado", "periferico", StatusItem.DISPONIVEL, proprietarioDois);
+
+        when(itemRepository.findAll()).thenReturn(List.of(itemUm, itemDois));
+
+        // Act
         List<ItemResponseDTO> response = itemService.buscarTodosItems();
 
+        // Assert
         assertNotNull(response);
-        assertEquals(2,response.size());
-        assertEquals(itemUm.getNome(),response.get(0).nomeItem());
-        assertEquals(itemDois.getNome(),response.get(1).nomeItem());
+        assertEquals(2, response.size());
+        assertEquals(itemUm.getNome(), response.get(0).nomeItem());
+        assertEquals(itemDois.getNome(), response.get(1).nomeItem());
 
         verify(itemRepository).findAll();
     }
@@ -220,26 +225,35 @@ public class ItemServiceTest {
     @Test
     void lancarExcecaoQuandoNaoRetornarNenhumRegistro()
     {
+        // Arrange
         when(itemRepository.findAll()).thenReturn(List.of());
 
-        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class,()->itemService.buscarTodosItems());
+        // Act
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> itemService.buscarTodosItems());
+
+        // Assert
         assertEquals("Nenhum registro cadastrado", exception.getMessage());
 
         verify(itemRepository).findAll();
     }
+
 
     // --- GET BY ID ---
 
     @Test
     void retornarItemPorId()
     {
-        Usuario proprietario =  UsuarioFactory.criarUsuarioPronto();
+        // Arrange
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
         Item item = ItemFactory.criarItemPronto(proprietario);
 
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
 
+        // Act
         ItemResponseDTO response = itemService.buscarItem(item.getId());
-        validarDadosItem(item,response);
+
+        // Assert
+        validarDadosItem(item, response);
 
         verify(itemRepository).findById(item.getId());
     }
@@ -247,30 +261,39 @@ public class ItemServiceTest {
     @Test
     void retornarExcecaoQuandoIdDeItemNaoEncontrado()
     {
+        // Arrange
         Long id = 111L;
 
         when(itemRepository.findById(id)).thenReturn(Optional.empty());
 
-        IdNaoEncontradoException exception = assertThrows(IdNaoEncontradoException.class,()->itemService.buscarItem(id));
-        assertEquals("Id de item não encontrado",exception.getMessage());
+        // Act
+        IdNaoEncontradoException exception = assertThrows(IdNaoEncontradoException.class, () -> itemService.buscarItem(id));
+
+        // Assert
+        assertEquals("Id de item não encontrado", exception.getMessage());
 
         verify(itemRepository).findById(id);
     }
+
 
     // --- GET BY CATEGORIA ---
 
     @Test
     void buscarItemPorCategoria()
     {
-        Usuario proprietario =  UsuarioFactory.criarUsuarioPronto();
+        // Arrange
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
         Item item = ItemFactory.criarItemPronto(proprietario);
 
         when(itemRepository.findByCategoria(item.getCategoria())).thenReturn(List.of(item));
 
+        // Act
         List<ItemResponseDTO> responseList = itemService.buscarPorCategoria(item.getCategoria());
+
+        // Assert
         assertNotNull(responseList);
 
-        validarDadosItem(item,responseList.getFirst());
+        validarDadosItem(item, responseList.getFirst());
 
         verify(itemRepository).findByCategoria(item.getCategoria());
     }
@@ -278,11 +301,54 @@ public class ItemServiceTest {
     @Test
     void excecaoQuandoNenhumRegistroEncontrado()
     {
+        // Arrange
         StatusItem statusItem = StatusItem.VENDIDO;
 
         when(itemRepository.findByStatusItem(statusItem)).thenReturn(List.of());
 
-        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class,()->itemService.buscarItemPorStatus(statusItem));
+        // Act
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> itemService.buscarItemPorStatus(statusItem));
+
+        // Assert
+        assertEquals("Nenhum registro de status encontrado", exception.getMessage());
+
+        verify(itemRepository).findByStatusItem(statusItem);
+    }
+
+    // --- GET BY STATUS ---
+
+    @Test
+    void buscarItemPorStatus()
+    {
+        // Arrange
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        when(itemRepository.findByStatusItem(item.getStatusItem())).thenReturn(List.of(item));
+
+        // Act
+        List<ItemResponseDTO> responseList = itemService.buscarItemPorStatus(item.getStatusItem());
+
+        // Assert
+        assertNotNull(responseList);
+
+        validarDadosItem(item, responseList.getFirst());
+
+        verify(itemRepository).findByStatusItem(item.getStatusItem());
+    }
+
+    @Test
+    void excecaoQuandoNenhumItemEncontradoPorStatus()
+    {
+        // Arrange
+        StatusItem statusItem = StatusItem.VENDIDO;
+
+        when(itemRepository.findByStatusItem(statusItem)).thenReturn(List.of());
+
+        // Act
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> itemService.buscarItemPorStatus(statusItem));
+
+        // Assert
         assertEquals("Nenhum registro de status encontrado", exception.getMessage());
 
         verify(itemRepository).findByStatusItem(statusItem);
