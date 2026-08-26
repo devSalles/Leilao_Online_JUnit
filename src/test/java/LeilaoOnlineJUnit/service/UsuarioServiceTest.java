@@ -298,11 +298,7 @@ public class UsuarioServiceTest {
         assertNotNull(usuarioResponseDTO);
         assertEquals(1,usuarioResponseDTO.size());
 
-        assertEquals(usuario.getId(),usuarioResponseDTO.getFirst().id());
-        assertEquals(usuario.getNome(),usuarioResponseDTO.getFirst().nome());
-        assertEquals(usuario.getEmail(),usuarioResponseDTO.getFirst().email());
-        assertEquals(usuario.getCpf(),usuarioResponseDTO.getFirst().cpf());
-        assertEquals(usuario.getStatusUsuario(),usuarioResponseDTO.getFirst().statusUsuario());
+        validarDadosUsuario(usuario,usuarioResponseDTO.getFirst());
 
         verify(usuarioRepository).findByStatusUsuario(statusUsuario);
     }
