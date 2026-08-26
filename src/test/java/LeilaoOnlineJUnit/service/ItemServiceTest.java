@@ -1,6 +1,7 @@
 package LeilaoOnlineJUnit.service;
 
 import LeilaoOnlineJUnit.Enum.StatusItem;
+import LeilaoOnlineJUnit.Enum.StatusUsuario;
 import LeilaoOnlineJUnit.dto.item.ItemResponseDTO;
 import LeilaoOnlineJUnit.dto.item.ItemResquestDTO;
 import LeilaoOnlineJUnit.dto.item.ItemUpdateRequestDTO;
@@ -11,6 +12,7 @@ import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.infra.exception.ItemEmLeilaoException;
 import LeilaoOnlineJUnit.infra.exception.ItemVendidoException;
+import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.repository.ItemRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -188,7 +191,42 @@ public class ItemServiceTest {
         verify(itemRepository,never()).save(any(Item.class));
         verify(itemRepository).findById(item.getId());
     }
-    
+
+    // --- GET ALL ITEM ---
+
+    @Test
+    void listarTodosItensCadastrados()
+    {
+        Usuario proprietarioUm = UsuarioFactory.criarUsuarioPersonalizado(1L,"rafael","34257599065", StatusUsuario.ATIVO);
+        Item itemUm = ItemFactory.criarItemPersonalizado(1L,"Bike","perfeito estado","transporte",
+                StatusItem.EM_LEILAO ,proprietarioUm);
+
+        Usuario proprietarioDois = UsuarioFactory.criarUsuarioPersonalizado(2L,"watson","83110569000", StatusUsuario.ATIVO);
+        Item itemDois = ItemFactory.criarItemPersonalizado(1L,"Monitor","perfeito estado","periferico",
+                StatusItem.DISPONIVEL ,proprietarioDois);
+
+        when(itemRepository.findAll()).thenReturn(List.of(itemUm,itemDois));
+
+        List<ItemResponseDTO> response = itemService.buscarTodosItems();
+
+        assertNotNull(response);
+        assertEquals(2,response.size());
+        assertEquals(itemUm.getNome(),response.get(0).nomeItem());
+        assertEquals(itemDois.getNome(),response.get(1).nomeItem());
+
+        verify(itemRepository).findAll();
+    }
+
+    @Test
+    void lancarExcecaoQuandoNaoRetornarNenhumRegistro()
+    {
+        when(itemRepository.findAll()).thenReturn(List.of());
+
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class,()->itemService.buscarTodosItems());
+        assertEquals("Nenhum registro cadastrado", exception.getMessage());
+
+        verify(itemRepository).findAll();
+    }
 
     // --- METODO AUXILIAR ---
 
