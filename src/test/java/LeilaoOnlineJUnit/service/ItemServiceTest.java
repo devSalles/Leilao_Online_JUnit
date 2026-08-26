@@ -228,6 +228,53 @@ public class ItemServiceTest {
         verify(itemRepository).findAll();
     }
 
+    // --- GET BY ID ---
+
+    @Test
+    void retornarItemPorId()
+    {
+        Usuario proprietario =  UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+
+        ItemResponseDTO response = itemService.buscarItem(item.getId());
+        validarDadosItem(item,response);
+
+        verify(itemRepository).findById(item.getId());
+    }
+
+    @Test
+    void retornarExcecaoQuandoIdDeItemNaoEncontrado()
+    {
+        Long id = 111L;
+
+        when(itemRepository.findById(id)).thenReturn(Optional.empty());
+
+        IdNaoEncontradoException exception = assertThrows(IdNaoEncontradoException.class,()->itemService.buscarItem(id));
+        assertEquals("Id de item não encontrado",exception.getMessage());
+
+        verify(itemRepository).findById(id);
+    }
+
+    // --- GET BY CATEGORIA ---
+
+    @Test
+    void buscarItemPorCategoria()
+    {
+        Usuario proprietario =  UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        when(itemRepository.findByCategoria(item.getCategoria())).thenReturn(List.of(item));
+
+        List<ItemResponseDTO> responseList = itemService.buscarPorCategoria(item.getCategoria());
+        assertNotNull(responseList);
+
+        validarDadosItem(item,responseList.getFirst());
+
+        verify(itemRepository).findByCategoria(item.getCategoria());
+    }
+
     // --- METODO AUXILIAR ---
 
     private void validarDadosItem(Item item, ItemResponseDTO itemResponseDTO)
