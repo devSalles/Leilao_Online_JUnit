@@ -391,6 +391,43 @@ public class ItemServiceTest {
         verify(itemRepository).findByProprietarioId(proprietarioId);
     }
 
+    @Test
+    void buscarPorNome()
+    {
+        // Arrange
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        when(itemRepository.findByNome(item.getNome())).thenReturn(List.of(item));
+
+        // Act
+        List<ItemResponseDTO> responseList = itemService.buscarPorNome(item.getNome());
+
+        // Assert
+        assertNotNull(responseList);
+
+        validarDadosItem(item, responseList.getFirst());
+
+        verify(itemRepository).findByNome(item.getNome());
+    }
+
+    @Test
+    void excecaoQuandoNenhumItemEncontradoPorNome()
+    {
+        // Arrange
+        String nome = "Bicicleta";
+
+        when(itemRepository.findByNome(nome)).thenReturn(List.of());
+
+        // Act
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> itemService.buscarPorNome(nome));
+
+        // Assert
+        assertEquals("Nenhum registro de categoria encontrado", exception.getMessage());
+
+        verify(itemRepository).findByNome(nome);
+    }
+
     // --- METODO AUXILIAR ---
 
     private void validarDadosItem(Item item, ItemResponseDTO itemResponseDTO)
