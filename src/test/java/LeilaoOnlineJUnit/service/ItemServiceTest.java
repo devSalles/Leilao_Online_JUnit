@@ -354,6 +354,43 @@ public class ItemServiceTest {
         verify(itemRepository).findByStatusItem(statusItem);
     }
 
+    @Test
+    void buscarItemPorProprietario()
+    {
+        // Arrange
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        when(itemRepository.findByProprietarioId(proprietario.getId())).thenReturn(List.of(item));
+
+        // Act
+        List<ItemResponseDTO> responseList = itemService.buscarItemPorProprietario(proprietario.getId());
+
+        // Assert
+        assertNotNull(responseList);
+
+        validarDadosItem(item, responseList.getFirst());
+
+        verify(itemRepository).findByProprietarioId(proprietario.getId());
+    }
+
+    @Test
+    void excecaoQuandoNenhumItemEncontradoPorProprietario()
+    {
+        // Arrange
+        Long proprietarioId = 1L;
+
+        when(itemRepository.findByProprietarioId(proprietarioId)).thenReturn(List.of());
+
+        // Act
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> itemService.buscarItemPorProprietario(proprietarioId));
+
+        // Assert
+        assertEquals("Nenhum registro de item de proprietário encontrado", exception.getMessage());
+
+        verify(itemRepository).findByProprietarioId(proprietarioId);
+    }
+
     // --- METODO AUXILIAR ---
 
     private void validarDadosItem(Item item, ItemResponseDTO itemResponseDTO)
