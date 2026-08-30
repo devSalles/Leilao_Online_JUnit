@@ -30,12 +30,11 @@ public class LeilaoService {
 
     private final LeilaoRepository leilaoRepository;
     private final LanceRepository lanceRepository;
-
     private final ItemService itemService;
     private final UsuarioService usuarioService;
 
     @Transactional
-    public LeilaoResponseDTO agendarLeilao(LeilaoRequestDTO  leilaoRequestDTO)
+    public LeilaoResponseDTO agendarLeilao(LeilaoRequestDTO leilaoRequestDTO)
     {
         Usuario criadorID = usuarioService.buscarIdUsuario(leilaoRequestDTO.idCriador());
         Item itemID = itemService.buscarID(leilaoRequestDTO.idItem());
