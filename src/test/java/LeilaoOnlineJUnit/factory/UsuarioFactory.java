@@ -2,7 +2,9 @@ package LeilaoOnlineJUnit.factory;
 
 import LeilaoOnlineJUnit.Enum.StatusUsuario;
 import LeilaoOnlineJUnit.entity.Usuario;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class UsuarioFactory {
 
     public static Usuario criarUsuarioPronto(){

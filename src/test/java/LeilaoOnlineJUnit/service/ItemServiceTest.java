@@ -189,8 +189,6 @@ public class ItemServiceTest {
 
     // --- GET ALL ITEM ---
 
-    // --- GET ALL ITEM ---
-
     @Test
     void listarTodosItensCadastrados()
     {

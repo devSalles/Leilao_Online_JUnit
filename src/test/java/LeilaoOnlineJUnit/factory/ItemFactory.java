@@ -3,7 +3,9 @@ package LeilaoOnlineJUnit.factory;
 import LeilaoOnlineJUnit.Enum.StatusItem;
 import LeilaoOnlineJUnit.entity.Item;
 import LeilaoOnlineJUnit.entity.Usuario;
+import lombok.experimental.UtilityClass;
 
+@UtilityClass
 public class ItemFactory {
 
     public static Item criarItemPronto(Usuario proprietario)
