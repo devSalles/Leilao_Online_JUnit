@@ -9,10 +9,7 @@ import LeilaoOnlineJUnit.entity.Item;
 import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.factory.ItemFactory;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
-import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
-import LeilaoOnlineJUnit.infra.exception.ItemEmLeilaoException;
-import LeilaoOnlineJUnit.infra.exception.ItemVendidoException;
-import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
+import LeilaoOnlineJUnit.infra.exception.*;
 import LeilaoOnlineJUnit.repository.ItemRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import org.junit.jupiter.api.Test;
@@ -21,11 +18,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -354,6 +349,8 @@ public class ItemServiceTest {
         verify(itemRepository).findByStatusItem(statusItem);
     }
 
+    // --- GET BY PROPRIETARIO ---
+
     @Test
     void buscarItemPorProprietario()
     {
@@ -391,6 +388,8 @@ public class ItemServiceTest {
         verify(itemRepository).findByProprietarioId(proprietarioId);
     }
 
+    // --- GET BY NOME ---
+
     @Test
     void buscarPorNome()
     {
@@ -426,6 +425,87 @@ public class ItemServiceTest {
         assertEquals("Nenhum registro de categoria encontrado", exception.getMessage());
 
         verify(itemRepository).findByNome(nome);
+    }
+
+    // --- DELETE BY ID ---
+
+    @Test
+    void deletarItemPorId()
+    {
+        //Arrange
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+
+        //Act
+        itemService.removerItem(item.getId());
+
+        //Assert
+        verify(itemRepository).delete(item);
+        verify(itemRepository).findById(item.getId());
+        verify(leilaoRepository).existsByItemId(item.getId());
+
+    }
+
+    @Test
+    void lancarExcecaoQuandoNenhumItemEncontradoPorId()
+    {
+        //Arrange
+        Long idItem = 111L;
+
+        when(itemRepository.findById(idItem)).thenReturn(Optional.empty());
+
+        //Act
+        IdNaoEncontradoException exception = assertThrows(IdNaoEncontradoException.class,()->itemService.removerItem(idItem));
+
+        //Assert
+        assertEquals("Id de item não encontrado",exception.getMessage());
+
+        verify(itemRepository).findById(idItem);
+        verifyNoInteractions(leilaoRepository);
+    }
+
+    @Test
+    void lancarExcecaoQuandoItemPossuirLeilaoVinculado()
+    {
+        //Arrange
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+        when(leilaoRepository.existsByItemId(item.getId())).thenReturn(true);
+
+        //Act
+        ItemVinculadoAoLeilaoException exception = assertThrows(ItemVinculadoAoLeilaoException.class,()->itemService.removerItem(item.getId()));
+
+        //Assert
+        assertEquals("Item vínculado ao leilão não pode ser excluído", exception.getMessage());
+
+        verify(itemRepository).findById(item.getId());
+        verify(leilaoRepository).existsByItemId(item.getId());
+        verify(itemRepository, never()).delete(any(Item.class));
+    }
+
+    @Test
+    void lancarExcecaoQuandoStatusDeitemDiferenteDeDisponivel()
+    {
+        //Arange
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPersonalizado(1L,"QCY T43","Excelente estado","Fone",StatusItem.EM_LEILAO, proprietario);
+
+        when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
+
+        //Act
+        ItemVinculadoAoLeilaoException exception = assertThrows(ItemVinculadoAoLeilaoException.class,()->itemService.removerItem(item.getId()));
+
+        //Assert
+        assertEquals("Item vínculado ao leilão não pode ser excluído",exception.getMessage());
+
+        verify(itemRepository).findById(item.getId());
+        verify(leilaoRepository).existsByItemId(item.getId());
+        verify(itemRepository, never()).delete(any(Item.class));
+
     }
 
     // --- METODO AUXILIAR ---
