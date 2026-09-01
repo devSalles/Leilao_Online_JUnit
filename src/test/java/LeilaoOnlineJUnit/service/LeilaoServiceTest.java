@@ -1,6 +1,7 @@
 package LeilaoOnlineJUnit.service;
 
 import LeilaoOnlineJUnit.Enum.StatusItem;
+import LeilaoOnlineJUnit.Enum.StatusLeilao;
 import LeilaoOnlineJUnit.Enum.StatusUsuario;
 import LeilaoOnlineJUnit.dto.leilao.LeilaoRequestDTO;
 import LeilaoOnlineJUnit.dto.leilao.LeilaoResponseDTO;
@@ -8,6 +9,7 @@ import LeilaoOnlineJUnit.entity.Item;
 import LeilaoOnlineJUnit.entity.Leilao;
 import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.factory.ItemFactory;
+import LeilaoOnlineJUnit.factory.LeilaoFactory;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.*;
 import LeilaoOnlineJUnit.repository.LanceRepository;
@@ -45,6 +47,8 @@ public class LeilaoServiceTest {
 
     @InjectMocks
     LeilaoService leilaoService;
+
+    // --- POST AGENDAR LEILAO ---
 
     @Test
     void agendarLeilao()
@@ -256,6 +260,37 @@ public class LeilaoServiceTest {
         // Assert - verificando as chamadas
         verify(usuarioService).buscarIdUsuario(criador.getId());
         verify(itemService).buscarID(item.getId());
+    }
+
+    // --- PUT LEILÃO ---
+
+    @Test
+    void atualizarLeilao()
+    {
+        //Arrange
+        Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo",
+                "28784851066", StatusUsuario.ATIVO);
+        Item item = ItemFactory.criarItemPersonalizado(1L, "CERATO"," excelente estado",
+                "veículos", StatusItem.DISPONIVEL,criador);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L,LocalDateTime.now().plusDays(1),LocalDateTime.now().plusDays(1)
+        ,StatusLeilao.AGENDADO,item,criador);
+
+        when(itemService.buscarID(item.getId())).thenReturn(item);
+        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+
+        LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(4),
+                item.getId(), criador.getId());
+
+        //Act
+        LeilaoResponseDTO response = leilaoService.atualizarLeilao(leilao.getId(),request);
+
+        //Assert
+        validarDaddosLeilao(leilao,response);
+        verify(usuarioService).buscarIdUsuario(criador.getId());
+        verify(itemService).buscarID(item.getId());
+        verify(leilaoRepository).save(any(Leilao.class));
     }
 
     // --- METODO AUXILIAR ---
