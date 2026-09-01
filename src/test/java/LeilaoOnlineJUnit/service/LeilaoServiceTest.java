@@ -9,10 +9,7 @@ import LeilaoOnlineJUnit.entity.Leilao;
 import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.factory.ItemFactory;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
-import LeilaoOnlineJUnit.infra.exception.ItemEmLeilaoException;
-import LeilaoOnlineJUnit.infra.exception.ItemVendidoException;
-import LeilaoOnlineJUnit.infra.exception.UsuarioBloqueadoException;
-import LeilaoOnlineJUnit.infra.exception.UsuarioNaoProprietarioException;
+import LeilaoOnlineJUnit.infra.exception.*;
 import LeilaoOnlineJUnit.repository.LanceRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import org.junit.jupiter.api.Test;
@@ -172,6 +169,91 @@ public class LeilaoServiceTest {
         ItemVendidoException exception = assertThrows(ItemVendidoException.class,()-> leilaoService.agendarLeilao(resquest));
         assertEquals("Item vendido não pode ser vínculado", exception.getMessage());
 
+        verify(usuarioService).buscarIdUsuario(criador.getId());
+        verify(itemService).buscarID(item.getId());
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoDataInicioForPosteriorADataFim() {
+
+        // Arrange
+        Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo",
+                "34257599065", StatusUsuario.ATIVO);
+
+        Item item = ItemFactory.criarItemPersonalizado(1L, "Bicicleta", "Excelente estado",
+                "Veículos", StatusItem.DISPONIVEL, criador);
+
+        LocalDateTime dataInicio = LocalDateTime.now().plusDays(3);
+        LocalDateTime dataFim = LocalDateTime.now().plusDays(2);
+
+        LeilaoRequestDTO request = new LeilaoRequestDTO(dataInicio, dataFim, item.getId(), criador.getId());
+
+        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+
+        when(itemService.buscarID(item.getId())).thenReturn(item);
+
+        // Act + Assert
+        assertThrows(DataIncorretaException.class, () -> leilaoService.agendarLeilao(request));
+
+        // Assert - verificando as chamadas
+        verify(usuarioService).buscarIdUsuario(criador.getId());
+        verify(itemService).buscarID(item.getId());
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoDataInicioNaoForFutura() {
+
+        // Arrange
+        Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo",
+                "34257599065", StatusUsuario.ATIVO);
+
+        Item item = ItemFactory.criarItemPersonalizado(1L, "Bicicleta", "Excelente estado",
+                "Veículos", StatusItem.DISPONIVEL, criador);
+
+        LocalDateTime dataInicio = LocalDateTime.now().minusDays(1);
+        LocalDateTime dataFim = LocalDateTime.now().plusDays(2);
+
+        LeilaoRequestDTO request = new LeilaoRequestDTO(dataInicio, dataFim, item.getId(), criador.getId());
+
+        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+
+        when(itemService.buscarID(item.getId())).thenReturn(item);
+
+        // Act + Assert
+        DataIncorretaException exception = assertThrows(DataIncorretaException.class, () -> leilaoService.agendarLeilao(request));
+
+        assertEquals("A data de início está incorreta", exception.getMessage());
+
+        // Assert - verificando as chamadas
+        verify(usuarioService).buscarIdUsuario(criador.getId());
+        verify(itemService).buscarID(item.getId());
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoDataFimNaoForPosteriorADataInicio() {
+
+        // Arrange
+        Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo",
+                "34257599065", StatusUsuario.ATIVO);
+
+        Item item = ItemFactory.criarItemPersonalizado(1L, "Bicicleta", "Excelente estado",
+                "Veículos", StatusItem.DISPONIVEL, criador);
+
+        LocalDateTime dataInicio = LocalDateTime.now().plusDays(2);
+        LocalDateTime dataFim = dataInicio;
+
+        LeilaoRequestDTO request = new LeilaoRequestDTO(dataInicio, dataFim, item.getId(), criador.getId());
+
+        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+
+        when(itemService.buscarID(item.getId())).thenReturn(item);
+
+        // Act + Assert
+        DataIncorretaException exception = assertThrows(DataIncorretaException.class, () -> leilaoService.agendarLeilao(request));
+
+        assertEquals("A data de encerramento está incorreta", exception.getMessage());
+
+        // Assert - verificando as chamadas
         verify(usuarioService).buscarIdUsuario(criador.getId());
         verify(itemService).buscarID(item.getId());
     }
