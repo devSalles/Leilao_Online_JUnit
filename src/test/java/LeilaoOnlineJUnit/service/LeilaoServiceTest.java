@@ -50,8 +50,7 @@ public class LeilaoServiceTest {
     // --- POST AGENDAR LEILAO ---
 
     @Test
-    void agendarLeilao()
-    {
+    void agendarLeilao() {
         //Arrange
         Usuario usuario = UsuarioFactory.criarUsuarioPronto();
         Item item = ItemFactory.criarItemPronto(usuario);
@@ -76,7 +75,7 @@ public class LeilaoServiceTest {
 
         Leilao leilao = captor.getValue();
 
-        validarDaddosLeilao(leilao,response);
+        validarDaddosLeilao(leilao, response);
     }
 
     @Test
@@ -155,21 +154,20 @@ public class LeilaoServiceTest {
     }
 
     @Test
-    void deveLancarExcecaoQuandoItemEstiverVendido()
-    {
+    void deveLancarExcecaoQuandoItemEstiverVendido() {
         Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo",
                 "34257599065", StatusUsuario.ATIVO);
 
         Item item = ItemFactory.criarItemPersonalizado(1L, "Bicicleta", "Excelente estado",
                 "Veículos", StatusItem.VENDIDO, criador);
 
-        LeilaoRequestDTO resquest = new LeilaoRequestDTO(LocalDateTime.now().plusDays(1),LocalDateTime.now().plusDays(2),
-                criador.getId(),item.getId());
+        LeilaoRequestDTO resquest = new LeilaoRequestDTO(LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2),
+                criador.getId(), item.getId());
 
         when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
         when(itemService.buscarID(item.getId())).thenReturn(item);
 
-        ItemVendidoException exception = assertThrows(ItemVendidoException.class,()-> leilaoService.agendarLeilao(resquest));
+        ItemVendidoException exception = assertThrows(ItemVendidoException.class, () -> leilaoService.agendarLeilao(resquest));
         assertEquals("Item vendido não pode ser vínculado", exception.getMessage());
 
         verify(usuarioService).buscarIdUsuario(criador.getId());
@@ -264,16 +262,15 @@ public class LeilaoServiceTest {
     // --- PUT LEILÃO ---
 
     @Test
-    void atualizarLeilao()
-    {
+    void atualizarLeilao() {
         //Arrange
         Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo",
                 "28784851066", StatusUsuario.ATIVO);
-        Item item = ItemFactory.criarItemPersonalizado(1L, "CERATO"," excelente estado",
-                "veículos", StatusItem.DISPONIVEL,criador);
+        Item item = ItemFactory.criarItemPersonalizado(1L, "CERATO", " excelente estado",
+                "veículos", StatusItem.DISPONIVEL, criador);
 
-        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L,LocalDateTime.now().plusDays(1),LocalDateTime.now().plusDays(1)
-                ,StatusLeilao.AGENDADO,item,criador);
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(1)
+                , StatusLeilao.AGENDADO, item, criador);
 
         when(itemService.buscarID(item.getId())).thenReturn(item);
         when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
@@ -283,26 +280,25 @@ public class LeilaoServiceTest {
                 item.getId(), criador.getId());
 
         //Act
-        LeilaoResponseDTO response = leilaoService.atualizarLeilao(leilao.getId(),request);
+        LeilaoResponseDTO response = leilaoService.atualizarLeilao(leilao.getId(), request);
 
         //Assert
-        validarDaddosLeilao(leilao,response);
+        validarDaddosLeilao(leilao, response);
         verify(usuarioService).buscarIdUsuario(criador.getId());
         verify(itemService).buscarID(item.getId());
         verify(leilaoRepository).save(any(Leilao.class));
     }
 
     @Test
-    void LancarExcecaoQuandoStatusDeLeilaoForDiferenteDeAgendado()
-    {
+    void LancarExcecaoQuandoStatusDeLeilaoForDiferenteDeAgendado() {
         //Arrange
         Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo",
                 "28784851066", StatusUsuario.ATIVO);
-        Item item = ItemFactory.criarItemPersonalizado(1L, "CERATO"," excelente estado",
-                "veículos", StatusItem.DISPONIVEL,criador);
+        Item item = ItemFactory.criarItemPersonalizado(1L, "CERATO", " excelente estado",
+                "veículos", StatusItem.DISPONIVEL, criador);
 
-        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L,LocalDateTime.now().plusDays(1),LocalDateTime.now().plusDays(1)
-                ,StatusLeilao.ABERTO,item,criador);
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(1)
+                , StatusLeilao.ABERTO, item, criador);
 
         when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
         lenient().when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
@@ -313,27 +309,139 @@ public class LeilaoServiceTest {
 
         //Act
         StatusDeLeilaoIncorretoException exception = assertThrows(StatusDeLeilaoIncorretoException.class,
-                ()-> leilaoService.atualizarLeilao(leilao.getId(),request));
+                () -> leilaoService.atualizarLeilao(leilao.getId(), request));
 
         //Assert
-        assertEquals("Apenas leilões com status de AGENDADO podem ser atualizados",exception.getMessage());
+        assertEquals("Apenas leilões com status de AGENDADO podem ser atualizados", exception.getMessage());
 
         verify(leilaoRepository).findById(leilao.getId());
-        verify(leilaoRepository,never()).save(any(Leilao.class));
+        verify(leilaoRepository, never()).save(any(Leilao.class));
+    }
+
+    @Test
+    void LancarExcecaoQuandoCriadorEstiverBloqueado() {
+        // Arrange
+        Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo",
+                "28784851066", StatusUsuario.BLOQUEADO);
+
+        Item item = ItemFactory.criarItemPersonalizado(1L, "CERATO", "excelente estado",
+                "veículos", StatusItem.DISPONIVEL, criador);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2),
+                StatusLeilao.AGENDADO, item, criador);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+
+        when(itemService.buscarID(item.getId())).thenReturn(item);
+
+        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+
+        LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(4),
+                item.getId(), criador.getId());
+
+        // Act
+        UsuarioBloqueadoException exception = assertThrows(UsuarioBloqueadoException.class, () -> leilaoService.atualizarLeilao(leilao.getId(), request));
+
+        // Assert
+        assertEquals("usuario bloqueado não pode fazer agendamento de leilão", exception.getMessage());
+
+        verify(leilaoRepository, never()).save(any(Leilao.class));
+    }
+
+    @Test
+    void LancarExcecaoQuandoCriadorNaoForProprietarioDoItem()
+    {
+        // Arrange
+        Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo", "28784851066", StatusUsuario.ATIVO);
+
+        Usuario proprietario = UsuarioFactory.criarUsuarioPersonalizado(2L, "Rafael", "34257599065", StatusUsuario.ATIVO);
+
+        Item item = ItemFactory.criarItemPersonalizado(1L, "CERATO", "excelente estado", "veículos", StatusItem.DISPONIVEL, proprietario);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), StatusLeilao.AGENDADO, item, proprietario);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+
+        when(itemService.buscarID(item.getId())).thenReturn(item);
+
+        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+
+        LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(4), item.getId(), criador.getId());
+
+        // Act
+        UsuarioNaoProprietarioException exception = assertThrows(UsuarioNaoProprietarioException.class, () -> leilaoService.atualizarLeilao(leilao.getId(), request));
+
+        // Assert
+        assertNotNull(exception);
+
+        verify(leilaoRepository, never()).save(any(Leilao.class));
+    }
+
+    @Test
+    void LancarExcecaoQuandoItemEstiverEmLeilao()
+    {
+        // Arrange
+        Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo", "28784851066", StatusUsuario.ATIVO);
+
+        Item item = ItemFactory.criarItemPersonalizado(1L, "CERATO", "excelente estado", "veículos", StatusItem.EM_LEILAO, criador);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), StatusLeilao.AGENDADO, item, criador);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+
+        when(itemService.buscarID(item.getId())).thenReturn(item);
+
+        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+
+        LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(4), item.getId(), criador.getId());
+
+        // Act
+        ItemEmLeilaoException exception = assertThrows(ItemEmLeilaoException.class, () -> leilaoService.atualizarLeilao(leilao.getId(), request));
+
+        // Assert
+        assertEquals("Item em leilão não pode ser vínculado", exception.getMessage());
+
+        verify(leilaoRepository, never()).save(any(Leilao.class));
+    }
+
+    @Test
+    void LancarExcecaoQuandoItemEstiverVendido()
+    {
+        // Arrange
+        Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo", "28784851066", StatusUsuario.ATIVO);
+
+        Item item = ItemFactory.criarItemPersonalizado(1L, "CERATO", "excelente estado", "veículos", StatusItem.VENDIDO, criador);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), StatusLeilao.AGENDADO, item, criador);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+
+        when(itemService.buscarID(item.getId())).thenReturn(item);
+
+        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+
+        LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(4), item.getId(), criador.getId());
+
+        // Act
+        ItemVendidoException exception = assertThrows(ItemVendidoException.class, () -> leilaoService.atualizarLeilao(leilao.getId(), request));
+
+        // Assert
+        assertEquals("Item vendido não pode ser vínculado", exception.getMessage());
+
+        verify(leilaoRepository, never()).save(any(Leilao.class));
     }
 
     // --- METODO AUXILIAR ---
 
-    public void validarDaddosLeilao(Leilao leilao, LeilaoResponseDTO leilaoResponseDTO)
-    {
+    public void validarDaddosLeilao(Leilao leilao, LeilaoResponseDTO leilaoResponseDTO) {
         assertAll(
-                ()-> assertNotNull(leilaoResponseDTO),
-                ()-> assertEquals(leilao.getId(),leilaoResponseDTO.id()),
-                ()-> assertEquals(leilao.getDataInicio(),leilaoResponseDTO.dataInicio()),
-                ()-> assertEquals(leilao.getDataFim(),leilaoResponseDTO.dataFim()),
-                ()-> assertEquals(leilao.getStatusLeilao(), leilaoResponseDTO.statusLeilao()),
-                ()-> assertEquals(leilao.getCriador().getId(), leilaoResponseDTO.idCriador()),
-                ()-> assertEquals(leilao.getItem().getId(),leilaoResponseDTO.idItem())
+                () -> assertNotNull(leilaoResponseDTO),
+                () -> assertEquals(leilao.getId(), leilaoResponseDTO.id()),
+                () -> assertEquals(leilao.getDataInicio(), leilaoResponseDTO.dataInicio()),
+                () -> assertEquals(leilao.getDataFim(), leilaoResponseDTO.dataFim()),
+                () -> assertEquals(leilao.getStatusLeilao(), leilaoResponseDTO.statusLeilao()),
+                () -> assertEquals(leilao.getCriador().getId(), leilaoResponseDTO.idCriador()),
+                () -> assertEquals(leilao.getItem().getId(), leilaoResponseDTO.idItem())
         );
     }
 }
