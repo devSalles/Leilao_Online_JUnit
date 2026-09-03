@@ -27,8 +27,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class LeilaoServiceTest {
@@ -274,7 +273,7 @@ public class LeilaoServiceTest {
                 "veículos", StatusItem.DISPONIVEL,criador);
 
         Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L,LocalDateTime.now().plusDays(1),LocalDateTime.now().plusDays(1)
-        ,StatusLeilao.AGENDADO,item,criador);
+                ,StatusLeilao.AGENDADO,item,criador);
 
         when(itemService.buscarID(item.getId())).thenReturn(item);
         when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
@@ -291,6 +290,36 @@ public class LeilaoServiceTest {
         verify(usuarioService).buscarIdUsuario(criador.getId());
         verify(itemService).buscarID(item.getId());
         verify(leilaoRepository).save(any(Leilao.class));
+    }
+
+    @Test
+    void LancarExcecaoQuandoStatusDeLeilaoForDiferenteDeAgendado()
+    {
+        //Arrange
+        Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo",
+                "28784851066", StatusUsuario.ATIVO);
+        Item item = ItemFactory.criarItemPersonalizado(1L, "CERATO"," excelente estado",
+                "veículos", StatusItem.DISPONIVEL,criador);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L,LocalDateTime.now().plusDays(1),LocalDateTime.now().plusDays(1)
+                ,StatusLeilao.ABERTO,item,criador);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+        lenient().when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+        lenient().when(itemService.buscarID(item.getId())).thenReturn(item);
+
+        LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(4),
+                item.getId(), criador.getId());
+
+        //Act
+        StatusDeLeilaoIncorretoException exception = assertThrows(StatusDeLeilaoIncorretoException.class,
+                ()-> leilaoService.atualizarLeilao(leilao.getId(),request));
+
+        //Assert
+        assertEquals("Apenas leilões com status de AGENDADO podem ser atualizados",exception.getMessage());
+
+        verify(leilaoRepository).findById(leilao.getId());
+        verify(leilaoRepository,never()).save(any(Leilao.class));
     }
 
     // --- METODO AUXILIAR ---
