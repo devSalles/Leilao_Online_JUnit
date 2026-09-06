@@ -215,12 +215,10 @@ public class LeilaoServiceTest {
         LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(4), item.getId(), criador.getId());
 
         // Act + Assert
-        assertThrows(UsuarioBloqueadoException.class, () -> leilaoService.atualizarLeilao(leilao.getId(), request));
+        assertThrows(UsuarioBloqueadoException.class,()->leilaoService.atualizarLeilao(leilao.getId(), request));
 
         verify(leilaoRepository, never()).save(any(Leilao.class));
     }
-
-
 
     // --- METODO AUXILIAR ---
 
