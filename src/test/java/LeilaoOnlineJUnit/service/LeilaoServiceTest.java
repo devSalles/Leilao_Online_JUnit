@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -96,8 +97,8 @@ public class LeilaoServiceTest {
         Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(idCriador,"Anderson","17733878047",statusUsuario);
         Item item = ItemFactory.criarItemPersonalizado(1L,"Bicicleta","Excelente estado","transporte",statusItem,proprietario);
 
-        lenient().when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
-        lenient().when(itemService.buscarID(item.getId())).thenReturn(item);
+        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+        when(itemService.buscarID(item.getId())).thenReturn(item);
 
         LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item.getId(), criador.getId());
 
@@ -105,6 +106,7 @@ public class LeilaoServiceTest {
 
         verify(usuarioService).buscarIdUsuario(criador.getId());
         verify(itemService).buscarID(item.getId());
+        verify(leilaoRepository,never()).save(any(Leilao.class));
     }
 
     @Test
@@ -220,6 +222,32 @@ public class LeilaoServiceTest {
         verify(leilaoRepository, never()).save(any(Leilao.class));
     }
 
+    @Test
+    void lancarExcecaoQuandoItemJaEstiverVinculadoAOutroLeilao() {
+
+        //Arrange
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item itemAtual = ItemFactory.criarItemPronto(proprietario);
+        Item outroItem = ItemFactory.criarItemPersonalizado(2L, "Civic", "Excelente estado", "veículos", StatusItem.DISPONIVEL, proprietario);
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L, LocalDateTime.now().plusDays(2), LocalDateTime.now().plusDays(3), StatusLeilao.AGENDADO, itemAtual, proprietario);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+        when(itemService.buscarID(outroItem.getId())).thenReturn(outroItem);
+        when(usuarioService.buscarIdUsuario(proprietario.getId())).thenReturn(proprietario);
+        when(leilaoRepository.existsByItemIdAndStatusLeilaoIn(outroItem.getId(), List.of(StatusLeilao.AGENDADO, StatusLeilao.ABERTO))).thenReturn(true);
+
+        LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(4), outroItem.getId(), proprietario.getId());
+
+        // Act + Assert
+        assertThrows(ItemVinculadoAoLeilaoException.class, () -> leilaoService.atualizarLeilao(leilao.getId(), request));
+
+        // Assert
+        verify(leilaoRepository).findById(leilao.getId());
+        verify(itemService).buscarID(outroItem.getId());
+        verify(usuarioService).buscarIdUsuario(proprietario.getId());
+        verify(leilaoRepository).existsByItemIdAndStatusLeilaoIn(outroItem.getId(), List.of(StatusLeilao.AGENDADO, StatusLeilao.ABERTO));
+        verify(leilaoRepository, never()).save(any(Leilao.class));
+    }
     // --- METODO AUXILIAR ---
 
     private static Stream<Arguments> cenariosValidacaoCriadorItem()

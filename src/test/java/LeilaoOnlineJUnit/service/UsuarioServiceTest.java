@@ -46,7 +46,7 @@ public class UsuarioServiceTest {
     void deveSalvarUsuario()
     {
         //Arrange
-        UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo","bernardo@gmail.com","142.829.436-88");
+        UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo","bernardo@gmail.com","499.215.310-00");
 
         //Act
         UsuarioResponseDTO usuarioResponse = usuarioService.salvarUsuario(usuarioRequestDTO);
@@ -54,7 +54,7 @@ public class UsuarioServiceTest {
         //Assert
         assertEquals("Bernardo",usuarioResponse.nome());
         assertEquals("bernardo@gmail.com",usuarioResponse.email());
-        assertEquals("14282943688",usuarioResponse.cpf());
+        assertEquals("49921531000",usuarioResponse.cpf());
 
         usuarioRepository.save(any(Usuario.class));
     }
@@ -63,7 +63,7 @@ public class UsuarioServiceTest {
     void lancarExcecaoQuandoEmailExistente()
     {
         //Arrange
-        UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo","bernardo@gmail.com","142.829.436-88");
+        UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo","bernardo@gmail.com","715.159.700-27");
 
         when(usuarioRepository.existsByEmail(usuarioRequestDTO.email())).thenReturn(true);
 
@@ -78,10 +78,10 @@ public class UsuarioServiceTest {
     void deveLancarExcecaoQuandoCpfExistente()
     {
         //Arrange
-        UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo","bernardo@gmail.com","142.829.436-88");
+        UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo","bernardo@gmail.com","110.969.290-07");
 
         //Act
-        when(usuarioRepository.existsByCpf("14282943688")).thenReturn(true);
+        when(usuarioRepository.existsByCpf("11096929007")).thenReturn(true);
 
         //Assert
         assertThrows(CpfRepetidoException.class,()->usuarioService.salvarUsuario(usuarioRequestDTO));
@@ -209,7 +209,7 @@ public class UsuarioServiceTest {
     void buscarPorCPF()
     {
         //Arrange
-        String cpf = "14282943688";
+        String cpf = "06693512020";
         Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
         when(usuarioRepository.findByCpf(cpf)).thenReturn(usuario);
@@ -219,7 +219,7 @@ public class UsuarioServiceTest {
 
         //Assert
         assertNotNull(usuarioCpfResponse);
-        assertEquals("14282943688",usuarioCpfResponse.cpf());
+        assertEquals("06693512020",usuarioCpfResponse.cpf());
 
         verify(usuarioRepository).findByCpf(usuario.getCpf());
 
@@ -230,9 +230,9 @@ public class UsuarioServiceTest {
     void deveLancarExcecaoQuandoCpfNaoEncontrado()
     {
         // Arrange
-        String cpf = "142.829.436-88";
+        String cpf = "79451761004";
 
-        when(usuarioRepository.findByCpf("14282943688")).thenReturn(null);
+        when(usuarioRepository.findByCpf(cpf)).thenReturn(null);
 
         // Act
         CpfNaoEncontradoException exception = assertThrows(CpfNaoEncontradoException.class, () -> usuarioService.exibirPorCpf(cpf));
@@ -240,7 +240,7 @@ public class UsuarioServiceTest {
         // Assert
         assertEquals("Cpf não encontrado", exception.getMessage());
 
-        verify(usuarioRepository).findByCpf("14282943688");
+        verify(usuarioRepository).findByCpf("79451761004");
     }
 
     //--- GET EMAIL ---

@@ -13,7 +13,7 @@ public class UsuarioFactory {
 
         usuario.setId(1L);
         usuario.setNome("Bernardo");
-        usuario.setCpf("14282943688");
+        usuario.setCpf("06693512020");
         usuario.setEmail("bernardo89@gmail.com");
         usuario.setStatusUsuario(StatusUsuario.ATIVO);
 
