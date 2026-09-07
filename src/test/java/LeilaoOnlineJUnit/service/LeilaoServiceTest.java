@@ -286,6 +286,39 @@ public class LeilaoServiceTest {
         verify(leilaoRepository).findAll();
     }
 
+    @Test
+    void deveListarLeilaoPorIdComSucesso()
+    {
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
+
+        leilao.setItem(item);
+
+        when(leilaoRepository.findById(1L)).thenReturn(Optional.of(leilao));
+
+        LeilaoResponseDTO resultado = leilaoService.listarID(1L);
+
+        assertNotNull(resultado);
+        assertEquals(leilao.getId(), resultado.id());
+
+        verify(leilaoRepository).findById(1L);
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoLeilaoNaoForEncontradoPorId()
+    {
+        when(leilaoRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(
+                    IdNaoEncontradoException.class,
+                () -> leilaoService.listarID(1L)
+        );
+
+        verify(leilaoRepository).findById(1L);
+    }
+
     // --- METODO AUXILIAR ---
 
     private static Stream<Arguments> cenariosValidacaoCriadorItem()
