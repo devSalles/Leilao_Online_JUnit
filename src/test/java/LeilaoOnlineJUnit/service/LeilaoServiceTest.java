@@ -250,6 +250,8 @@ public class LeilaoServiceTest {
         verify(leilaoRepository, never()).save(any(Leilao.class));
     }
 
+    // --- GET ALL ---
+
     @Test
     void deveListarTodosOsLeiloesComSucesso()
     {
@@ -283,6 +285,8 @@ public class LeilaoServiceTest {
         verify(leilaoRepository).findAll();
     }
 
+    // --- GET BY ID ---
+
     @Test
     void deveListarLeilaoPorIdComSucesso()
     {
@@ -312,6 +316,8 @@ public class LeilaoServiceTest {
 
         verify(leilaoRepository).findById(1L);
     }
+
+    // --- GET BY STATUS ---
 
     @Test
     void deveListarLeiloesPorStatusComSucesso()
@@ -346,6 +352,8 @@ public class LeilaoServiceTest {
 
         verify(leilaoRepository).findByStatusLeilao(StatusLeilao.AGENDADO);
     }
+
+    // --- GET ALL BY VENCEDOR ---
 
     @Test
     void deveListarLeiloesPorVencedorComSucesso()
@@ -384,6 +392,45 @@ public class LeilaoServiceTest {
         assertEquals("Nenhum registro com esse id foi encontrado", exception.getMessage());
 
         verify(leilaoRepository).findByVencedorId(2L);
+    }
+    // --- GET ALL BY CRIADOR ---
+
+    @Test
+    void deveListarLeiloesPorCriadorComSucesso()
+    {
+        Usuario criador = UsuarioFactory.criarUsuarioPronto();
+        criador.setId(1L);
+
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
+
+        leilao.setItem(item);
+        leilao.setCriador(criador);
+
+        when(leilaoRepository.findByCriadorId(1L)).thenReturn(List.of(leilao));
+
+        List<LeilaoResponseDTO> resultado = leilaoService.listarPorCriadorId(1L);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertEquals(leilao.getId(), resultado.get(0).id());
+
+        verify(leilaoRepository).findByCriadorId(1L);
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoNaoExistiremLeiloesDoCriador()
+    {
+        when(leilaoRepository.findByCriadorId(1L))
+                .thenReturn(Collections.emptyList());
+
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarPorCriadorId(1L));
+
+        assertEquals("Nenhum registro com esse id foi encontrado", exception.getMessage());
+
+        verify(leilaoRepository).findByCriadorId(1L);
     }
 
     // --- METODO AUXILIAR ---
