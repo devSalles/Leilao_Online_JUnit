@@ -347,6 +347,45 @@ public class LeilaoServiceTest {
         verify(leilaoRepository).findByStatusLeilao(StatusLeilao.AGENDADO);
     }
 
+    @Test
+    void deveListarLeiloesPorVencedorComSucesso()
+    {
+        Usuario vencedor = UsuarioFactory.criarUsuarioPronto();
+        vencedor.setId(2L);
+
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
+
+        leilao.setItem(item);
+        leilao.setVencedor(vencedor);
+
+        when(leilaoRepository.findByVencedorId(2L))
+                .thenReturn(List.of(leilao));
+
+        List<LeilaoResponseDTO> resultado =
+                leilaoService.listarPorVencedor(2L);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertEquals(leilao.getId(), resultado.get(0).id());
+
+        verify(leilaoRepository).findByVencedorId(2L);
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoNaoExistiremLeiloesDoVencedor()
+    {
+        when(leilaoRepository.findByVencedorId(2L)).thenReturn(Collections.emptyList());
+
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarPorVencedor(2L));
+
+        assertEquals("Nenhum registro com esse id foi encontrado", exception.getMessage());
+
+        verify(leilaoRepository).findByVencedorId(2L);
+    }
+
     // --- METODO AUXILIAR ---
 
     private static Stream<Arguments> cenariosValidacaoCriadorItem()
