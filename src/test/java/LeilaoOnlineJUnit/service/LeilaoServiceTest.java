@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -248,6 +249,43 @@ public class LeilaoServiceTest {
         verify(leilaoRepository).existsByItemIdAndStatusLeilaoIn(outroItem.getId(), List.of(StatusLeilao.AGENDADO, StatusLeilao.ABERTO));
         verify(leilaoRepository, never()).save(any(Leilao.class));
     }
+
+    @Test
+    void deveListarTodosOsLeiloesComSucesso()
+    {
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
+
+        leilao.setItem(item);
+
+        when(leilaoRepository.findAll()).thenReturn(List.of(leilao));
+
+        List<LeilaoResponseDTO> resultado = leilaoService.listarTodosLeiloes();
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertEquals(leilao.getId(), resultado.get(0).id());
+
+        verify(leilaoRepository).findAll();
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoNaoExistiremLeiloes()
+    {
+        when(leilaoRepository.findAll()).thenReturn(Collections.emptyList());
+
+        NenhumRegistroException exception = assertThrows(
+                NenhumRegistroException.class,
+                () -> leilaoService.listarTodosLeiloes()
+        );
+
+        assertEquals("Nenhum registro foi encontrado", exception.getMessage());
+
+        verify(leilaoRepository).findAll();
+    }
+
     // --- METODO AUXILIAR ---
 
     private static Stream<Arguments> cenariosValidacaoCriadorItem()
