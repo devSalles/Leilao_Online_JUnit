@@ -276,10 +276,7 @@ public class LeilaoServiceTest {
     {
         when(leilaoRepository.findAll()).thenReturn(Collections.emptyList());
 
-        NenhumRegistroException exception = assertThrows(
-                NenhumRegistroException.class,
-                () -> leilaoService.listarTodosLeiloes()
-        );
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarTodosLeiloes());
 
         assertEquals("Nenhum registro foi encontrado", exception.getMessage());
 
@@ -311,12 +308,43 @@ public class LeilaoServiceTest {
     {
         when(leilaoRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(
-                    IdNaoEncontradoException.class,
-                () -> leilaoService.listarID(1L)
-        );
+        assertThrows(IdNaoEncontradoException.class, () -> leilaoService.listarID(1L));
 
         verify(leilaoRepository).findById(1L);
+    }
+
+    @Test
+    void deveListarLeiloesPorStatusComSucesso()
+    {
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
+
+        leilao.setItem(item);
+        leilao.setStatusLeilao(StatusLeilao.AGENDADO);
+
+        when(leilaoRepository.findByStatusLeilao(StatusLeilao.AGENDADO)).thenReturn(List.of(leilao));
+
+        List<LeilaoResponseDTO> resultado = leilaoService.listarLeiloesPorStatus(StatusLeilao.AGENDADO);
+
+        assertNotNull(resultado);
+        assertEquals(1, resultado.size());
+        assertEquals(leilao.getId(), resultado.get(0).id());
+
+        verify(leilaoRepository).findByStatusLeilao(StatusLeilao.AGENDADO);
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoNaoExistiremLeiloesComStatusInformado()
+    {
+        when(leilaoRepository.findByStatusLeilao(StatusLeilao.AGENDADO)).thenReturn(Collections.emptyList());
+
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarLeiloesPorStatus(StatusLeilao.AGENDADO));
+
+        assertEquals("Nenhum registro com esse status foi encontrado", exception.getMessage());
+
+        verify(leilaoRepository).findByStatusLeilao(StatusLeilao.AGENDADO);
     }
 
     // --- METODO AUXILIAR ---
