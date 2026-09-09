@@ -20,7 +20,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -435,6 +434,8 @@ public class LeilaoServiceTest {
         verify(leilaoRepository).findByCriadorId(1L);
     }
 
+    // --- GET BY DATA INCIAL---
+
     @Test
     void deveRealizarBuscaEntreDatasIniciaisComSucesso()
     {
@@ -447,6 +448,14 @@ public class LeilaoServiceTest {
     }
 
     @Test
+    void deveLancarExcecaoQuandoDatasInciaisIncorretas()
+    {
+        assertThrowsDataIncorreta(leilaoService::realizarBuscaPorDataInicial);
+    }
+
+    // --- GET BY DATA FINAL ---
+
+    @Test
     void deveRealizarBuscaEntreDatasFinaisComSucesso()
     {
         List<LeilaoResponseDTO> response = realizarBuscaEntreDatasComSucesso(
@@ -457,6 +466,11 @@ public class LeilaoServiceTest {
         assertEquals(1, response.size());
     }
 
+    @Test
+    void deveLancarExcecaoQuandoDatasFinaisIncorretas()
+    {
+        assertThrowsDataIncorreta(leilaoService::realizarBuscarEntreDatasFinais);
+    }
 
     // --- METODO AUXILIAR ---
 
@@ -492,6 +506,20 @@ public class LeilaoServiceTest {
         LocalDateTime dataFinal = LocalDateTime.of(2026, 9, 11, 23, 59);
 
         return LeilaoFactory.criarLeilaoPersonalizado(1L,dataInicial,dataFinal,StatusLeilao.ABERTO,item,proprietario);
+    }
+
+    private void assertThrowsDataIncorreta(
+            BiFunction<LocalDate,LocalDate,List<LeilaoResponseDTO>> metodoService
+    )
+    {
+        LocalDate dataInicial = LocalDate.of(2026,9,10);
+        LocalDate dataFinal = LocalDate.of(2026,9,1);
+
+        DataIncorretaException exception = assertThrows(DataIncorretaException.class,()->metodoService.apply(dataInicial,dataFinal));
+
+        assertEquals("Datas de início esta posterior a data final",exception.getMessage());
+
+        verifyNoInteractions(leilaoRepository);
     }
 
     private static Stream<Arguments> cenariosValidacaoCriadorItem()
