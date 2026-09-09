@@ -25,10 +25,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -423,8 +426,7 @@ public class LeilaoServiceTest {
     @Test
     void deveLancarExcecaoQuandoNaoExistiremLeiloesDoCriador()
     {
-        when(leilaoRepository.findByCriadorId(1L))
-                .thenReturn(Collections.emptyList());
+        when(leilaoRepository.findByCriadorId(1L)).thenReturn(Collections.emptyList());
 
         NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarPorCriadorId(1L));
 
@@ -433,7 +435,64 @@ public class LeilaoServiceTest {
         verify(leilaoRepository).findByCriadorId(1L);
     }
 
+    @Test
+    void deveRealizarBuscaEntreDatasIniciaisComSucesso()
+    {
+       List<LeilaoResponseDTO> response = realizarBuscaEntreDatasComSucesso(
+                       leilaoRepository::findByDataInicioBetween,
+                       leilaoService::realizarBuscaPorDataInicial
+               );
+
+       assertEquals(1, response.size());
+    }
+
+    @Test
+    void deveRealizarBuscaEntreDatasFinaisComSucesso()
+    {
+        List<LeilaoResponseDTO> response = realizarBuscaEntreDatasComSucesso(
+                leilaoRepository::findByDataFimBetween,
+                leilaoService::realizarBuscarEntreDatasFinais
+        );
+
+        assertEquals(1, response.size());
+    }
+
+
     // --- METODO AUXILIAR ---
+
+    private List<LeilaoResponseDTO> realizarBuscaEntreDatasComSucesso(
+            BiFunction<LocalDateTime,LocalDateTime,List<Leilao>> metodoRepository,
+            BiFunction<LocalDate, LocalDate, List<LeilaoResponseDTO>> metodoService
+    )
+    {
+        LocalDate dataIncial = LocalDate.of(2026,9,1);
+        LocalDate dataFinal = LocalDate.of(2026,9,10);
+
+        LocalDateTime dataInicialFormatada = dataIncial.atStartOfDay();
+        LocalDateTime dataFinalFormatada = dataFinal.atTime(LocalTime.MAX);
+
+        Leilao leilao = criarLeilaoParaTesteDeBusca();
+
+        when(metodoRepository.apply(dataInicialFormatada,dataFinalFormatada)).thenReturn(List.of(leilao));
+        List<LeilaoResponseDTO> response = metodoService.apply(dataIncial,dataFinal);
+
+        assertNotNull(response);
+
+        validarDaddosLeilao(leilao,response.getFirst());
+
+        return response;
+    }
+
+    private Leilao criarLeilaoParaTesteDeBusca()
+    {
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
+
+        LocalDateTime dataInicial = LocalDateTime.of(2026, 9, 2, 1, 0);
+        LocalDateTime dataFinal = LocalDateTime.of(2026, 9, 11, 23, 59);
+
+        return LeilaoFactory.criarLeilaoPersonalizado(1L,dataInicial,dataFinal,StatusLeilao.ABERTO,item,proprietario);
+    }
 
     private static Stream<Arguments> cenariosValidacaoCriadorItem()
     {
@@ -444,7 +503,7 @@ public class LeilaoServiceTest {
 
                 Arguments.of(StatusUsuario.ATIVO, StatusItem.EM_LEILAO, 1L,1L, ItemEmLeilaoException.class),
 
-                Arguments.of(StatusUsuario.ATIVO,StatusItem.VENDIDO,1L,1L,ItemVendidoException.class)
+                Arguments.of(StatusUsuario.ATIVO,StatusItem.VENDIDO,1L,1L, ItemVendidoException.class)
         );
     }
 
