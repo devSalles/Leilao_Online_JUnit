@@ -280,9 +280,6 @@ public class LeilaoService {
 
     private void validarDatasLeilao(LeilaoRequestDTO  leilaoRequestDTO)
     {
-        if (leilaoRequestDTO.dataInicio().isAfter(leilaoRequestDTO.dataFim())) {
-            throw new DataIncorretaException();
-        }
 
         if (!leilaoRequestDTO.dataInicio().isAfter(LocalDateTime.now())) {
             throw new DataIncorretaException("A data de início está incorreta");

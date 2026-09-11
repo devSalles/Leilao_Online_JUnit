@@ -14,6 +14,8 @@ import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.*;
 import LeilaoOnlineJUnit.repository.LanceRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
+import net.bytebuddy.asm.Advice;
+import org.hibernate.exception.DataException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -112,51 +114,26 @@ public class LeilaoServiceTest {
         verify(leilaoRepository,never()).save(any(Leilao.class));
     }
 
-    @Test
-    void deveLancarExcecaoQuandoDataInicioForPosteriorADataFim() {
+    @ParameterizedTest
+    @MethodSource("cenariosValidacaoDatasIncorretas")
+    void deveLancarExcecaoQuandoDatasIncorretas(
+            LocalDateTime dataInicial,
+            LocalDateTime dataFinal,
+            String mensagem
+    ) {
+        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(proprietario);
 
-        // Arrange
-        LocalDateTime dataInicio = LocalDateTime.now().plusDays(3);
-        LocalDateTime dataFim = LocalDateTime.now().plusDays(2);
+        when(usuarioService.buscarIdUsuario(proprietario.getId())).thenReturn(proprietario);
+        when(itemService.buscarID(item.getId())).thenReturn(item);
 
-        LeilaoRequestDTO request = new LeilaoRequestDTO(dataInicio, dataFim, 1L, 1L);
+        LeilaoRequestDTO request = new LeilaoRequestDTO(dataInicial, dataFinal, item.getId(), proprietario.getId());
 
-        // Act + Assert
-        assertThrows(DataIncorretaException.class, () -> leilaoService.agendarLeilao(request));
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoDataInicioNaoForFutura() {
-
-        // Arrange
-        LocalDateTime dataInicio = LocalDateTime.now().minusDays(1);
-
-        LocalDateTime dataFim = LocalDateTime.now().plusDays(2);
-
-        LeilaoRequestDTO request = new LeilaoRequestDTO(dataInicio, dataFim, 1L, 1L);
-
-        // Act + Assert
         DataIncorretaException exception = assertThrows(DataIncorretaException.class, () -> leilaoService.agendarLeilao(request));
+        assertEquals(mensagem, exception.getMessage());
 
-        assertEquals("A data de início está incorreta", exception.getMessage());
+        verify(leilaoRepository, never()).save(any(Leilao.class));
     }
-
-    @Test
-    void deveLancarExcecaoQuandoDataFimNaoForPosteriorADataInicio() {
-
-        // Arrange
-        LocalDateTime dataInicio = LocalDateTime.now().plusDays(2);
-
-        LocalDateTime dataFim = dataInicio;
-
-        LeilaoRequestDTO request = new LeilaoRequestDTO(dataInicio, dataFim, 1L, 1L);
-
-        // Act + Assert
-        DataIncorretaException exception = assertThrows(DataIncorretaException.class, () -> leilaoService.agendarLeilao(request));
-
-        assertEquals("A data de encerramento está incorreta", exception.getMessage());
-    }
-
 
     // --- PUT LEILÃO ---
 
@@ -526,15 +503,22 @@ public class LeilaoServiceTest {
     {
         return Stream.of(
                 Arguments.of(StatusUsuario.BLOQUEADO, StatusItem.DISPONIVEL, 1L, 1L, UsuarioBloqueadoException.class),
-
                 Arguments.of(StatusUsuario.ATIVO,StatusItem.DISPONIVEL,2L, 1L, UsuarioNaoProprietarioException.class),
-
                 Arguments.of(StatusUsuario.ATIVO, StatusItem.EM_LEILAO, 1L,1L, ItemEmLeilaoException.class),
-
                 Arguments.of(StatusUsuario.ATIVO,StatusItem.VENDIDO,1L,1L, ItemVendidoException.class)
         );
     }
 
+    private static Stream<Arguments> cenariosValidacaoDatasIncorretas()
+    {
+        LocalDateTime agora = LocalDateTime.now();
+
+        return Stream.of(
+                Arguments.of(agora.minusDays(1), agora.plusDays(2), "A data de início está incorreta"),
+                Arguments.of(agora.plusDays(2), agora.plusDays(2), "A data de encerramento está incorreta"),
+                Arguments.of(agora.plusDays(3), agora.plusDays(2), "A data de encerramento está incorreta")
+        );
+    }
     public void validarDaddosLeilao(Leilao leilao, LeilaoResponseDTO leilaoResponseDTO) {
         assertAll(
                 () -> assertNotNull(leilaoResponseDTO),
