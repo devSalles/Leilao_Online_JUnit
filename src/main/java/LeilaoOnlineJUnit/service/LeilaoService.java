@@ -95,7 +95,7 @@ public class LeilaoService {
 
         leilaoRepository.save(leilao);
 
-        return  LeilaoResponseDTO.fromLeilao(leilao);
+        return LeilaoResponseDTO.fromLeilao(leilao);
     }
 
     @Transactional
