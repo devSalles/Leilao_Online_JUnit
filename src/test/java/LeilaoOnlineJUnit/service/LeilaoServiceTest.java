@@ -306,6 +306,94 @@ public class LeilaoServiceTest {
         verify(leilaoRepository).findById(leilao.getId());
     }
 
+    // --- CANCELAR LEILÃO ---
+
+    @Test
+    void cancelarLeilaoAgendadoSemLanceVinculado()
+    {
+        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+        Item itemAtual = ItemFactory.criarItemPronto(usuario);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L,
+                LocalDateTime.now(),LocalDateTime.now().plusDays(2),
+                StatusLeilao.AGENDADO, itemAtual, usuario);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+
+        LeilaoResponseDTO response = leilaoService.abrirLeilao(leilao.getId());
+
+        validarDaddosLeilao(leilao,response);
+
+        verify(leilaoRepository).save(leilao    );
+        verify(leilaoRepository).findById(leilao.getId());
+    }
+
+    @Test
+    void deveLancarExcecaoAoCancelarLeilaoQueJaEstaCancelado() {
+        //Arrange
+        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+        Item itemAtual = ItemFactory.criarItemPronto(usuario);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L,
+                LocalDateTime.now(),LocalDateTime.now().plusDays(2),
+                StatusLeilao.CANCELADO, itemAtual, usuario);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+
+        //Act & Assert
+        StatusDeLeilaoIncorretoException exception = assertThrows(
+                StatusDeLeilaoIncorretoException.class,
+                () -> leilaoService.cancelarLeilao(leilao.getId())
+        );
+
+        assertEquals("Não e possível cancelar leilão, pois ele já está cancelado", exception.getMessage());
+        verify(leilaoRepository, never()).save(any());
+    }
+
+    @Test
+    void deveLancarExcecaoAoCancelarLeilaoComStatusDiferenteDeAgendado() {
+        //Arrange
+        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+        Item itemAtual = ItemFactory.criarItemPronto(usuario);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L,
+                LocalDateTime.now(),LocalDateTime.now().plusDays(2),
+                StatusLeilao.ABERTO, itemAtual, usuario);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+
+        //Act & Assert
+        StatusDeLeilaoIncorretoException exception = assertThrows(
+                StatusDeLeilaoIncorretoException.class,
+                () -> leilaoService.cancelarLeilao(leilao.getId())
+        );
+
+        assertEquals("Leilão só pode ser cancelado se estiver com status de agendado", exception.getMessage());
+        verify(leilaoRepository, never()).save(any());
+    }
+
+    @Test
+    void deveLancarExcecaoAoCancelarLeilaoAgendadoComLanceVinculado() {
+        //Arrange
+        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+        Item itemAtual = ItemFactory.criarItemPronto(usuario);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L,
+                LocalDateTime.now(),LocalDateTime.now().plusDays(2),
+                StatusLeilao.AGENDADO, itemAtual, usuario);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+        when(lanceRepository.existsByLeilaoId(leilao.getId())).thenReturn(true);
+
+        //Act & Assert
+        assertThrows(
+                PossuiLanceVinculadoException.class,
+                () -> leilaoService.cancelarLeilao(leilao.getId())
+        );
+
+        verify(leilaoRepository, never()).save(any());
+    }
+
     // --- GET ALL ---
 
     @Test
