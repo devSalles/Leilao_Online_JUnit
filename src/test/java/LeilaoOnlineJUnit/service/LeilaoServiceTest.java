@@ -319,7 +319,7 @@ public class LeilaoServiceTest {
 
         when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
 
-        LeilaoResponseDTO response = leilaoService.abrirLeilao(leilao.getId());
+        LeilaoResponseDTO response = leilaoService.cancelarLeilao(leilao.getId());
 
         validarDaddosLeilao(leilao,response);
 
