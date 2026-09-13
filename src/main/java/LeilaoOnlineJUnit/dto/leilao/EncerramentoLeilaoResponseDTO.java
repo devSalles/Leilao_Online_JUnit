@@ -1,5 +1,6 @@
 package LeilaoOnlineJUnit.dto.leilao;
 
+import LeilaoOnlineJUnit.Enum.StatusItem;
 import LeilaoOnlineJUnit.Enum.StatusLeilao;
 import LeilaoOnlineJUnit.entity.Leilao;
 
@@ -10,6 +11,7 @@ public record EncerramentoLeilaoResponseDTO(
         LocalDateTime dataInicio,
         LocalDateTime dataFim,
         StatusLeilao statusLeilao,
+        StatusItem statusItem,
         Long idItem,
         Long idCriador,
         Long idVencedor
@@ -19,12 +21,12 @@ public record EncerramentoLeilaoResponseDTO(
     {
         Long idVencedor = null;
 
-        if (leilao.getVencedor() != null) {
+        if (leilao.getVencedor() != null)
+        {
             idVencedor = leilao.getVencedor().getId();
         }
 
         return new EncerramentoLeilaoResponseDTO(leilao.getId(), leilao.getDataInicio(),leilao.getDataFim(),leilao.getStatusLeilao(),
-                leilao.getItem().getId(),leilao.getCriador().getId(),
-                idVencedor);
+                leilao.getItem().getStatusItem(), leilao.getItem().getId(),leilao.getCriador().getId(),idVencedor);
     }
 }
