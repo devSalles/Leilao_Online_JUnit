@@ -3,19 +3,20 @@ package LeilaoOnlineJUnit.service;
 import LeilaoOnlineJUnit.Enum.StatusItem;
 import LeilaoOnlineJUnit.Enum.StatusLeilao;
 import LeilaoOnlineJUnit.Enum.StatusUsuario;
+import LeilaoOnlineJUnit.dto.leilao.EncerramentoLeilaoResponseDTO;
 import LeilaoOnlineJUnit.dto.leilao.LeilaoRequestDTO;
 import LeilaoOnlineJUnit.dto.leilao.LeilaoResponseDTO;
 import LeilaoOnlineJUnit.entity.Item;
+import LeilaoOnlineJUnit.entity.Lance;
 import LeilaoOnlineJUnit.entity.Leilao;
 import LeilaoOnlineJUnit.entity.Usuario;
 import LeilaoOnlineJUnit.factory.ItemFactory;
+import LeilaoOnlineJUnit.factory.LanceFactory;
 import LeilaoOnlineJUnit.factory.LeilaoFactory;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.*;
 import LeilaoOnlineJUnit.repository.LanceRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
-import net.bytebuddy.asm.Advice;
-import org.hibernate.exception.DataException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,7 +26,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -34,7 +34,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -391,6 +390,79 @@ public class LeilaoServiceTest {
                 () -> leilaoService.cancelarLeilao(leilao.getId())
         );
 
+        verify(leilaoRepository, never()).save(any());
+    }
+
+    // --- ENCERRAR LEILÃO ---
+
+    @Test
+    void deveEncerrarLeilaoComLancesDefinindoVencedorEItemVendido()
+    {
+        Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(1L,"Bernardo","52850206032",StatusUsuario.ATIVO);
+        Item itemAtual = ItemFactory.criarItemPronto(criador);
+        Usuario vencedor = UsuarioFactory.criarUsuarioPronto();
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L,
+                LocalDateTime.now(),LocalDateTime.now().plusDays(2),
+                StatusLeilao.ABERTO, itemAtual, vencedor);
+        Lance maiorLance =  LanceFactory.criarLancePronto(vencedor,leilao);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+        when(lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao)).thenReturn(Optional.of(maiorLance));
+
+        EncerramentoLeilaoResponseDTO response = leilaoService.encerrarLeilao(leilao.getId());
+
+        assertEquals(StatusLeilao.ENCERRADO, response.statusLeilao());
+        assertEquals(vencedor.getId(), response.idVencedor());
+        assertEquals(StatusItem.VENDIDO, response.statusItem());
+        verify(leilaoRepository).save(leilao);
+
+        verify(leilaoRepository).save(leilao);
+        verify(lanceRepository).findFirstByLeilaoOrderByValorDesc(leilao);
+
+    }
+
+    @Test
+    void deveEncerrarLeilaoSemLancesDeixandoItemDisponivel()
+    {
+        Usuario criador = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(criador);
+        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item, criador);
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+        when(lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao)).thenReturn(Optional.empty());
+
+        EncerramentoLeilaoResponseDTO response = leilaoService.encerrarLeilao(leilao.getId());
+
+        assertEquals(StatusItem.DISPONIVEL,response.statusItem());
+        assertEquals(StatusLeilao.ENCERRADO, response.statusLeilao());
+        assertEquals(criador.getId(), response.idCriador());
+        assertEquals(item.getId(), response.idItem());
+        assertNull(response.idVencedor());
+
+        verify(leilaoRepository).save(leilao);
+        verify(leilaoRepository).findById(leilao.getId());
+        verify(lanceRepository).findFirstByLeilaoOrderByValorDesc(leilao);
+    }
+
+    @Test
+    void deveLancarExcecaoAoEncerrarLeilaoComStatusDiferenteDeAberto() {
+        //Arrange
+        Usuario criador = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(criador);
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(
+                1L, LocalDateTime.now(), LocalDateTime.now().plusDays(1),
+                StatusLeilao.AGENDADO, item, criador
+        );
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+
+        //Act & Assert
+        StatusDeLeilaoIncorretoException exception = assertThrows(
+                StatusDeLeilaoIncorretoException.class,
+                () -> leilaoService.encerrarLeilao(leilao.getId())
+        );
+
+        assertEquals("Apenas leilões ABERTOS podem ser encerrados", exception.getMessage());
         verify(leilaoRepository, never()).save(any());
     }
 
