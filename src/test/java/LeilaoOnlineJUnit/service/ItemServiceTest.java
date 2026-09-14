@@ -308,6 +308,20 @@ public class ItemServiceTest {
         verify(itemRepository).findByStatusItem(statusItem);
     }
 
+    @Test
+    void excecaoQuandoNenhumRegistroDeCategoriaEncontrado()
+    {
+        String categoria = "Eletronicos";
+
+        when(itemRepository.findByCategoria(categoria)).thenReturn(List.of());
+
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> itemService.buscarPorCategoria(categoria));
+
+        assertEquals("Nenhum registro de categoria encontrado", exception.getMessage());
+
+        verify(itemRepository).findByCategoria(categoria);
+    }
+
     // --- GET BY STATUS ---
 
     @Test
