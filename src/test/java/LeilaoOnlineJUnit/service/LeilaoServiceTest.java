@@ -582,6 +582,12 @@ public class LeilaoServiceTest {
         assertThrowsDataIncorreta(leilaoService::realizarBuscaPorDataInicial);
     }
 
+    @Test
+    void deveLancarExcecaoQuandoDatasIniciaisNaoExistir()
+    {
+        assertThrowsDataInexiste(leilaoService::realizarBuscaPorDataInicial);
+    }
+
     // --- GET BY DATA FINAL ---
 
     @Test
@@ -599,6 +605,12 @@ public class LeilaoServiceTest {
     void deveLancarExcecaoQuandoDatasFinaisIncorretas()
     {
         assertThrowsDataIncorreta(leilaoService::realizarBuscarEntreDatasFinais);
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoDatasFinaisNaoExistir()
+    {
+        assertThrowsDataInexiste(leilaoService::realizarBuscarEntreDatasFinais);
     }
 
     // --- METODO AUXILIAR ---
@@ -657,6 +669,17 @@ public class LeilaoServiceTest {
         assertEquals("Datas de início esta posterior a data final",exception.getMessage());
 
         verifyNoInteractions(leilaoRepository);
+    }
+
+    private void assertThrowsDataInexiste(
+            BiFunction<LocalDate,LocalDate,List<LeilaoResponseDTO>> metodoService
+    )
+    {
+        LocalDate dataInicial = LocalDate.of(2027,9,1);
+        LocalDate dataFinal = LocalDate.of(2027,9,10);
+
+        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class,()-> metodoService.apply(dataInicial,dataFinal));
+        assertEquals("Nenhum registro encontrado com essas datas",exception.getMessage());
     }
 
     private static Stream<Arguments> cenariosValidacaoCriadorItem()
