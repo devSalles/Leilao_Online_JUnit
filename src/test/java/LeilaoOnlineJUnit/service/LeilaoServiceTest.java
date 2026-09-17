@@ -84,6 +84,25 @@ public class LeilaoServiceTest {
         validarDadosLeilao(leilao, response);
     }
 
+    @Test
+    void deveLancarExcecaoQuandoItemJaEstiverVinculadoAoAgendarLeilao()
+    {
+        Usuario criador = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(criador);
+
+        LeilaoRequestDTO leilaoRequestDTO = new LeilaoRequestDTO(LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2),
+                item.getId(), criador.getId());
+
+        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+        when(itemService.buscarID(item.getId())).thenReturn(item);
+        when(leilaoRepository.existsByItemIdAndStatusLeilaoIn(item.getId(), List.of(StatusLeilao.ABERTO, StatusLeilao.AGENDADO)))
+                .thenReturn(true);
+
+        assertThrows(ItemVinculadoAoLeilaoException.class, () -> leilaoService.agendarLeilao(leilaoRequestDTO));
+
+        verify(leilaoRepository, never()).save(any(Leilao.class));
+    }
+
     @ParameterizedTest
     @MethodSource("cenariosValidacaoCriadorItem")
     void lancarExcecaoAoValidarCriadorEItem(
