@@ -153,49 +153,31 @@ public class LeilaoServiceTest {
         verify(leilaoRepository).save(any(Leilao.class));
     }
 
-//    @Test
-//    void deveLancarExcecaoQuandoItemEstiverVinculadoAOutroLeilao()
-//    {
-//        Usuario criador = UsuarioFactory.criarUsuarioPronto();
-//        Item item = ItemFactory.criarItemPronto(criador);
-//
-//        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(
-//                1L,
-//                LocalDateTime.now().plusDays(1),
-//                LocalDateTime.now().plusDays(2),
-//                StatusLeilao.AGENDADO,
-//                item,
-//                criador
-//        );
-//
-//        LeilaoRequestDTO leilaoRequestDTO = new LeilaoRequestDTO(
-//                LocalDateTime.now().plusDays(1),
-//                LocalDateTime.now().plusDays(2),
-//                item.getId(),
-//                criador.getId()
-//        );
-//
-//        when(leilaoRepository.findById(1L)).thenReturn(Optional.of(leilao));
-//        when(itemService.buscarID(item.getId())).thenReturn(item);
-//        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
-//
-//        when(leilaoRepository.existsByItemIdAndStatusLeilaoIn(
-//                eq(item.getId()),
-//                anyList()
-//        )).thenReturn(true);
-//
-//        assertThrows(
-//                ItemVinculadoAoLeilaoException.class,
-//                () -> leilaoService.atualizarLeilao(1L, leilaoRequestDTO)
-//        );
-//
-//        verify(leilaoRepository).existsByItemIdAndStatusLeilaoIn(
-//                eq(item.getId()),
-//                anyList()
-//        );
-//
-//        verify(leilaoRepository, never()).save(any(Leilao.class));
-//    }
+    @Test
+    void deveLancarExcecaoQuandoItemEstiverVinculadoAOutroLeilao()
+    {
+        Usuario criador = UsuarioFactory.criarUsuarioPronto();
+        Item itemAtualDoLeilao = ItemFactory.criarItemPronto(criador);
+        Item itemNovo = ItemFactory.criarItemPersonalizado(2L,"Bicicleta","exclente estado","transporte",
+                StatusItem.DISPONIVEL,criador);
+
+        Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2),
+                StatusLeilao.AGENDADO, itemAtualDoLeilao, criador);
+
+        LeilaoRequestDTO leilaoRequestDTO = new LeilaoRequestDTO(LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2),
+                itemNovo.getId(), criador.getId());
+
+        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+        when(itemService.buscarID(itemNovo.getId())).thenReturn(itemNovo);
+        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+
+        when(leilaoRepository.existsByItemIdAndStatusLeilaoIn(eq(itemNovo.getId()), anyList())).thenReturn(true);
+
+        assertThrows(ItemVinculadoAoLeilaoException.class, () -> leilaoService.atualizarLeilao(1L, leilaoRequestDTO));
+
+        verify(leilaoRepository).existsByItemIdAndStatusLeilaoIn(eq(itemNovo.getId()), anyList());
+        verify(leilaoRepository, never()).save(any(Leilao.class));
+    }
 
     @Test
     void LancarExcecaoQuandoStatusDeLeilaoForDiferenteDeAgendado() {
