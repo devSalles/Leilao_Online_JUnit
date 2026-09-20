@@ -35,10 +35,10 @@ public class LanceServiceTest {
     UsuarioService usuarioService;
 
     @Mock
-    LanceRepository lanceRepository;
+    LeilaoService leilaoService;
 
     @Mock
-    LanceRepository leilaoRepository;
+    LanceRepository lanceRepository;
 
     @InjectMocks
     LanceService lanceService;
@@ -105,5 +105,36 @@ public class LanceServiceTest {
 
         assertEquals("Nenhum registro foi encontrado", excecao.getMessage());
         verify(lanceRepository).findByLeilaoId(1L);
+    }
+
+    @Test
+    void deveListarTodosOsLancesComSucesso()
+    {
+        //Arrange
+        Lance outroLance = LanceFactory.criarLancePronto(usuario, leilao);
+        when(lanceRepository.findAll()).thenReturn(List.of(lance, outroLance));
+
+        //Act
+        List<LanceResponseDTO> resultado = lanceService.listarLances();
+
+        //Assert
+        assertEquals(2, resultado.size());
+        assertEquals(LanceResponseDTO.fromLance(lance), resultado.get(0));
+        assertEquals(LanceResponseDTO.fromLance(outroLance), resultado.get(1));
+        verify(lanceRepository).findAll();
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoNaoExistemLances()
+    {
+        //Arrange
+        when(lanceRepository.findAll()).thenReturn(List.of());
+
+        //Act
+        NenhumRegistroException excecao = assertThrows(NenhumRegistroException.class, () -> lanceService.listarLances());
+
+        //Assert
+        assertEquals("Nenhum registro foi encontrado", excecao.getMessage());
+        verify(lanceRepository).findAll();
     }
 }
