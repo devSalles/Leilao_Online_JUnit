@@ -10,6 +10,7 @@ import LeilaoOnlineJUnit.factory.LanceFactory;
 import LeilaoOnlineJUnit.factory.LeilaoFactory;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
+import LeilaoOnlineJUnit.infra.exception.NenhumRegistroException;
 import LeilaoOnlineJUnit.repository.LanceRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -78,5 +80,30 @@ public class LanceServiceTest {
 
         assertEquals("ID de lance não encontrado", excecao.getMessage());
         verify(lanceRepository).findById(99L);
+    }
+
+    @Test
+    void deveBuscarLancesPorLeilaoComSucesso()
+    {
+        Lance outroLance = LanceFactory.criarLancePronto(usuario, leilao);
+        when(lanceRepository.findByLeilaoId(leilao.getId())).thenReturn(List.of(lance, outroLance));
+
+        List<LanceResponseDTO> resultado = lanceService.buscarLancesPorLeilao(leilao.getId());
+
+        assertEquals(2, resultado.size());
+        assertEquals(LanceResponseDTO.fromLance(lance), resultado.get(0));
+        assertEquals(LanceResponseDTO.fromLance(outroLance), resultado.get(1));
+        verify(lanceRepository).findByLeilaoId(leilao.getId());
+    }
+
+    @Test
+    void deveLancarExcecaoQuandoLeilaoNaoPossuiLances()
+    {
+        when(lanceRepository.findByLeilaoId(1L)).thenReturn(Collections.emptyList());
+
+        NenhumRegistroException excecao = assertThrows(NenhumRegistroException.class, () -> lanceService.buscarLancesPorLeilao(1L));
+
+        assertEquals("Nenhum registro foi encontrado", excecao.getMessage());
+        verify(lanceRepository).findByLeilaoId(1L);
     }
 }
