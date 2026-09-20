@@ -11,12 +11,14 @@ import LeilaoOnlineJUnit.factory.LeilaoFactory;
 import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.IdNaoEncontradoException;
 import LeilaoOnlineJUnit.repository.LanceRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,18 +42,29 @@ public class LanceServiceTest {
     LanceService lanceService;
 
 
+    private Usuario usuario;
+    private Leilao leilao;
+    private Lance lance;
+
+    @BeforeEach
+    void setUp()
+    {
+        usuario = UsuarioFactory.criarUsuarioPronto();
+        Item item = ItemFactory.criarItemPronto(usuario);
+        leilao = LeilaoFactory.criarLeilaoPronto(item, usuario);
+        lance = LanceFactory.criarLancePronto(usuario, leilao);
+    }
+
     @Test
     void deveBuscarLancePorIdComSucesso()
     {
-        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
-        Item item = ItemFactory.criarItemPronto(usuario);
-        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item, usuario);
-        Lance lance = LanceFactory.criarLancePronto(usuario, leilao);
+        //Arrange
         when(lanceRepository.findById(1L)).thenReturn(Optional.of(lance));
 
-
+        //Act
         LanceResponseDTO resultado = lanceService.buscarLance(1L);
 
+        //Assert
         assertEquals(LanceResponseDTO.fromLance(lance), resultado);
         verify(lanceRepository).findById(1L);
     }
