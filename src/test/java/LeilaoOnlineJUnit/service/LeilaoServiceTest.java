@@ -17,6 +17,7 @@ import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.*;
 import LeilaoOnlineJUnit.repository.LanceRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -102,52 +103,80 @@ public class LeilaoServiceTest {
 
         verify(leilaoRepository, never()).save(any(Leilao.class));
     }
-
-    @ParameterizedTest
-    @MethodSource("cenariosValidacaoCriadorItem")
-    void lancarExcecaoAoValidarCriadorEItem(
-            StatusUsuario statusUsuario,
-            StatusItem statusItem,
-            Long idProprietatio,
-            Long idCriador,
-            Class<? extends RuntimeException> exceptionClass
-    )
+    @Nested
+    public class realizarValidacaoEntreCriadorEItem
     {
-        Usuario proprietario = UsuarioFactory.criarUsuarioPersonalizado(idProprietatio,"Bernardo","73056435056",statusUsuario);
-        Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(idCriador,"Anderson","17733878047",statusUsuario);
-        Item item = ItemFactory.criarItemPersonalizado(1L,"Bicicleta","Excelente estado","transporte",statusItem,proprietario);
+        @ParameterizedTest
+        @MethodSource("cenariosValidacaoCriadorItem")
+        void lancarExcecaoAoValidarCriadorEItem(
+                StatusUsuario statusUsuario,
+                StatusItem statusItem,
+                Long idProprietatio,
+                Long idCriador,
+                Class<? extends RuntimeException> exceptionClass
+        )
+        {
+            Usuario proprietario = UsuarioFactory.criarUsuarioPersonalizado(idProprietatio,"Bernardo","73056435056",statusUsuario);
+            Usuario criador = UsuarioFactory.criarUsuarioPersonalizado(idCriador,"Anderson","17733878047",statusUsuario);
+            Item item = ItemFactory.criarItemPersonalizado(1L,"Bicicleta","Excelente estado","transporte",statusItem,proprietario);
 
-        when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
-        when(itemService.buscarID(item.getId())).thenReturn(item);
+            when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+            when(itemService.buscarID(item.getId())).thenReturn(item);
 
-        LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item.getId(), criador.getId());
+            LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), item.getId(), criador.getId());
 
-        assertThrows(exceptionClass, () -> leilaoService.agendarLeilao(request));
+            assertThrows(exceptionClass, () -> leilaoService.agendarLeilao(request));
 
-        verify(usuarioService).buscarIdUsuario(criador.getId());
-        verify(itemService).buscarID(item.getId());
-        verify(leilaoRepository,never()).save(any(Leilao.class));
+            verify(usuarioService).buscarIdUsuario(criador.getId());
+            verify(itemService).buscarID(item.getId());
+            verify(leilaoRepository,never()).save(any(Leilao.class));
+        }
+
+        private static Stream<Arguments> cenariosValidacaoCriadorItem()
+        {
+            return Stream.of(
+                    Arguments.of(StatusUsuario.BLOQUEADO, StatusItem.DISPONIVEL, 1L, 1L, UsuarioBloqueadoException.class),
+                    Arguments.of(StatusUsuario.ATIVO,StatusItem.DISPONIVEL,2L, 1L, UsuarioNaoProprietarioException.class),
+                    Arguments.of(StatusUsuario.ATIVO, StatusItem.EM_LEILAO, 1L,1L, ItemEmLeilaoException.class),
+                    Arguments.of(StatusUsuario.ATIVO,StatusItem.VENDIDO,1L,1L, ItemVendidoException.class)
+            );
+        }
     }
 
-    @ParameterizedTest
-    @MethodSource("cenariosValidacaoDatasIncorretas")
-    void deveLancarExcecaoQuandoDatasIncorretas(
-            LocalDateTime dataInicial,
-            LocalDateTime dataFinal,
-            String mensagem
-    ) {
-        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
-        Item item = ItemFactory.criarItemPronto(proprietario);
+    @Nested
+    public class validarDatas
+    {
+        @ParameterizedTest
+        @MethodSource("cenariosValidacaoDatasIncorretas")
+        void deveLancarExcecaoQuandoDatasIncorretas(
+                LocalDateTime dataInicial,
+                LocalDateTime dataFinal,
+                String mensagem
+        ) {
+            Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+            Item item = ItemFactory.criarItemPronto(proprietario);
 
-        when(usuarioService.buscarIdUsuario(proprietario.getId())).thenReturn(proprietario);
-        when(itemService.buscarID(item.getId())).thenReturn(item);
+            when(usuarioService.buscarIdUsuario(proprietario.getId())).thenReturn(proprietario);
+            when(itemService.buscarID(item.getId())).thenReturn(item);
 
-        LeilaoRequestDTO request = new LeilaoRequestDTO(dataInicial, dataFinal, item.getId(), proprietario.getId());
+            LeilaoRequestDTO request = new LeilaoRequestDTO(dataInicial, dataFinal, item.getId(), proprietario.getId());
 
-        DataIncorretaException exception = assertThrows(DataIncorretaException.class, () -> leilaoService.agendarLeilao(request));
-        assertEquals(mensagem, exception.getMessage());
+            DataIncorretaException exception = assertThrows(DataIncorretaException.class, () -> leilaoService.agendarLeilao(request));
+            assertEquals(mensagem, exception.getMessage());
 
-        verify(leilaoRepository, never()).save(any(Leilao.class));
+            verify(leilaoRepository, never()).save(any(Leilao.class));
+        }
+
+        private static Stream<Arguments> cenariosValidacaoDatasIncorretas()
+        {
+            LocalDateTime agora = LocalDateTime.now();
+
+            return Stream.of(
+                    Arguments.of(agora.minusDays(1), agora.plusDays(2), "A data de início está incorreta"),
+                    Arguments.of(agora.plusDays(2), agora.plusDays(2), "A data de encerramento está incorreta"),
+                    Arguments.of(agora.plusDays(3), agora.plusDays(2), "A data de encerramento está incorreta")
+            );
+        }
     }
 
     // --- PUT LEILÃO ---
@@ -341,28 +370,41 @@ public class LeilaoServiceTest {
         verify(leilaoRepository).findById(leilao.getId());
     }
 
-    @ParameterizedTest
-    @MethodSource("cenariosCancelarLeilaoStatusIncorreto")
-    void deveLancarExcecaoAoCancelarLeilaoComStatusIncorreto(StatusLeilao status, String mensagemEsperada) {
-        Leilao leilao = criarLeilaoComStatus(status);
-        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+    @Nested
+    public class deveRealizarLancamentoDeExcecao
+    {
+        @ParameterizedTest
+        @MethodSource("cenariosCancelarLeilaoStatusIncorreto")
+        void deveLancarExcecaoAoCancelarLeilaoComStatusIncorreto(StatusLeilao status, String mensagemEsperada) {
+            Leilao leilao = criarLeilaoComStatus(status);
+            when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
 
-        StatusDeLeilaoIncorretoException exception = assertThrows(StatusDeLeilaoIncorretoException.class, () -> leilaoService.cancelarLeilao(leilao.getId()));
+            StatusDeLeilaoIncorretoException exception = assertThrows(StatusDeLeilaoIncorretoException.class, () -> leilaoService.cancelarLeilao(leilao.getId()));
 
-        assertEquals(mensagemEsperada, exception.getMessage());
-        verify(leilaoRepository, never()).save(any());
-    }
+            assertEquals(mensagemEsperada, exception.getMessage());
+            verify(leilaoRepository, never()).save(any());
+        }
 
-    @Test
-    void deveLancarExcecaoAoCancelarLeilaoAgendadoComLanceVinculado() {
-        Leilao leilao = criarLeilaoComStatus(StatusLeilao.AGENDADO);
+        private static Stream<Arguments> cenariosCancelarLeilaoStatusIncorreto()
+        {
+            return Stream.of(
+                    Arguments.of(StatusLeilao.CANCELADO, "Não e possível cancelar leilão, pois ele já está cancelado"),
+                    Arguments.of(StatusLeilao.ABERTO, "Leilão só pode ser cancelado se estiver com status de agendado")
+            );
+        }
 
-        when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
-        when(lanceRepository.existsByLeilaoId(leilao.getId())).thenReturn(true);
+        @Test
+        void deveLancarExcecaoAoCancelarLeilaoAgendadoComLanceVinculado()
+        {
+            Leilao leilao = criarLeilaoComStatus(StatusLeilao.AGENDADO);
 
-        assertThrows(PossuiLanceVinculadoException.class, () -> leilaoService.cancelarLeilao(leilao.getId()));
+            when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+            when(lanceRepository.existsByLeilaoId(leilao.getId())).thenReturn(true);
 
-        verify(leilaoRepository, never()).save(any());
+            assertThrows(PossuiLanceVinculadoException.class, () -> leilaoService.cancelarLeilao(leilao.getId()));
+
+            verify(leilaoRepository, never()).save(any());
+        }
     }
 
     // --- ENCERRAR LEILÃO ---
@@ -428,186 +470,207 @@ public class LeilaoServiceTest {
 
     // --- GET ALL ---
 
-    @Test
-    void deveListarTodosOsLeiloesComSucesso()
+    @Nested
+    public class realizarListagemTotal
     {
-        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
-        Item item = ItemFactory.criarItemPronto(proprietario);
+        @Test
+        void deveListarTodosOsLeiloesComSucesso()
+        {
+            Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+            Item item = ItemFactory.criarItemPronto(proprietario);
 
-        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
+            Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
 
-        leilao.setItem(item);
+            leilao.setItem(item);
 
-        when(leilaoRepository.findAll()).thenReturn(List.of(leilao));
+            when(leilaoRepository.findAll()).thenReturn(List.of(leilao));
 
-        List<LeilaoResponseDTO> resultado = leilaoService.listarTodosLeiloes();
+            List<LeilaoResponseDTO> resultado = leilaoService.listarTodosLeiloes();
 
-        assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        assertEquals(leilao.getId(), resultado.get(0).id());
+            assertNotNull(resultado);
+            assertEquals(1, resultado.size());
+            assertEquals(leilao.getId(), resultado.get(0).id());
 
-        verify(leilaoRepository).findAll();
-    }
+            verify(leilaoRepository).findAll();
+        }
 
-    @Test
-    void deveLancarExcecaoQuandoNaoExistiremLeiloes()
-    {
-        when(leilaoRepository.findAll()).thenReturn(Collections.emptyList());
+        @Test
+        void deveLancarExcecaoQuandoNaoExistiremLeiloes()
+        {
+            when(leilaoRepository.findAll()).thenReturn(Collections.emptyList());
 
-        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarTodosLeiloes());
+            NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarTodosLeiloes());
 
-        assertEquals("Nenhum registro foi encontrado", exception.getMessage());
+            assertEquals("Nenhum registro foi encontrado", exception.getMessage());
 
-        verify(leilaoRepository).findAll();
+            verify(leilaoRepository).findAll();
+        }
     }
 
     // --- GET BY ID ---
 
-    @Test
-    void deveListarLeilaoPorIdComSucesso()
+    @Nested
+    public class realizarBuscaPorId
     {
-        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
-        Item item = ItemFactory.criarItemPronto(proprietario);
+        @Test
+        void deveListarLeilaoPorIdComSucesso()
+        {
+            Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+            Item item = ItemFactory.criarItemPronto(proprietario);
 
-        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
+            Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
 
-        leilao.setItem(item);
+            leilao.setItem(item);
 
-        when(leilaoRepository.findById(1L)).thenReturn(Optional.of(leilao));
+            when(leilaoRepository.findById(1L)).thenReturn(Optional.of(leilao));
 
-        LeilaoResponseDTO resultado = leilaoService.listarID(1L);
+            LeilaoResponseDTO resultado = leilaoService.listarID(1L);
 
-        assertNotNull(resultado);
-        assertEquals(leilao.getId(), resultado.id());
+            assertNotNull(resultado);
+            assertEquals(leilao.getId(), resultado.id());
 
-        verify(leilaoRepository).findById(1L);
-    }
+            verify(leilaoRepository).findById(1L);
+        }
 
-    @Test
-    void deveLancarExcecaoQuandoLeilaoNaoForEncontradoPorId()
-    {
-        when(leilaoRepository.findById(1L)).thenReturn(Optional.empty());
+        @Test
+        void deveLancarExcecaoQuandoLeilaoNaoForEncontradoPorId()
+        {
+            when(leilaoRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(IdNaoEncontradoException.class, () -> leilaoService.listarID(1L));
+            assertThrows(IdNaoEncontradoException.class, () -> leilaoService.listarID(1L));
 
-        verify(leilaoRepository).findById(1L);
+            verify(leilaoRepository).findById(1L);
+        }
     }
 
     // --- GET BY STATUS ---
 
-    @Test
-    void deveListarLeiloesPorStatusComSucesso()
+    @Nested
+    public class realizarBuscaPorStatus
     {
-        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
-        Item item = ItemFactory.criarItemPronto(proprietario);
+        @Test
+        void deveListarLeiloesPorStatusComSucesso()
+        {
+            Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+            Item item = ItemFactory.criarItemPronto(proprietario);
 
-        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
+            Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
 
-        leilao.setItem(item);
-        leilao.setStatusLeilao(StatusLeilao.AGENDADO);
+            leilao.setItem(item);
+            leilao.setStatusLeilao(StatusLeilao.AGENDADO);
 
-        when(leilaoRepository.findByStatusLeilao(StatusLeilao.AGENDADO)).thenReturn(List.of(leilao));
+            when(leilaoRepository.findByStatusLeilao(StatusLeilao.AGENDADO)).thenReturn(List.of(leilao));
 
-        List<LeilaoResponseDTO> resultado = leilaoService.listarLeiloesPorStatus(StatusLeilao.AGENDADO);
+            List<LeilaoResponseDTO> resultado = leilaoService.listarLeiloesPorStatus(StatusLeilao.AGENDADO);
 
-        assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        assertEquals(leilao.getId(), resultado.get(0).id());
+            assertNotNull(resultado);
+            assertEquals(1, resultado.size());
+            assertEquals(leilao.getId(), resultado.get(0).id());
 
-        verify(leilaoRepository).findByStatusLeilao(StatusLeilao.AGENDADO);
-    }
+            verify(leilaoRepository).findByStatusLeilao(StatusLeilao.AGENDADO);
+        }
 
-    @Test
-    void deveLancarExcecaoQuandoNaoExistiremLeiloesComStatusInformado()
-    {
-        when(leilaoRepository.findByStatusLeilao(StatusLeilao.AGENDADO)).thenReturn(Collections.emptyList());
+        @Test
+        void deveLancarExcecaoQuandoNaoExistiremLeiloesComStatusInformado()
+        {
+            when(leilaoRepository.findByStatusLeilao(StatusLeilao.AGENDADO)).thenReturn(Collections.emptyList());
 
-        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarLeiloesPorStatus(StatusLeilao.AGENDADO));
+            NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarLeiloesPorStatus(StatusLeilao.AGENDADO));
 
-        assertEquals("Nenhum registro com esse status foi encontrado", exception.getMessage());
+            assertEquals("Nenhum registro com esse status foi encontrado", exception.getMessage());
 
-        verify(leilaoRepository).findByStatusLeilao(StatusLeilao.AGENDADO);
+            verify(leilaoRepository).findByStatusLeilao(StatusLeilao.AGENDADO);
+        }
     }
 
     // --- GET ALL BY VENCEDOR ---
 
-    @Test
-    void deveListarLeiloesPorVencedorComSucesso()
+    @Nested
+    public class listarTodosPeloVencedor
     {
-        Usuario vencedor = UsuarioFactory.criarUsuarioPronto();
-        vencedor.setId(2L);
+        @Test
+        void deveListarLeiloesPorVencedorComSucesso()
+        {
+            Usuario vencedor = UsuarioFactory.criarUsuarioPronto();
+            vencedor.setId(2L);
 
-        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
-        Item item = ItemFactory.criarItemPronto(proprietario);
+            Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+            Item item = ItemFactory.criarItemPronto(proprietario);
 
-        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
+            Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
 
-        leilao.setItem(item);
-        leilao.setVencedor(vencedor);
+            leilao.setItem(item);
+            leilao.setVencedor(vencedor);
 
-        when(leilaoRepository.findByVencedorId(2L))
-                .thenReturn(List.of(leilao));
+            when(leilaoRepository.findByVencedorId(2L))
+                    .thenReturn(List.of(leilao));
 
-        List<LeilaoResponseDTO> resultado =
-                leilaoService.listarPorVencedor(2L);
+            List<LeilaoResponseDTO> resultado =
+                    leilaoService.listarPorVencedor(2L);
 
-        assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        assertEquals(leilao.getId(), resultado.get(0).id());
+            assertNotNull(resultado);
+            assertEquals(1, resultado.size());
+            assertEquals(leilao.getId(), resultado.get(0).id());
 
-        verify(leilaoRepository).findByVencedorId(2L);
+            verify(leilaoRepository).findByVencedorId(2L);
+        }
+
+        @Test
+        void deveLancarExcecaoQuandoNaoExistiremLeiloesDoVencedor()
+        {
+            when(leilaoRepository.findByVencedorId(2L)).thenReturn(Collections.emptyList());
+
+            NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarPorVencedor(2L));
+
+            assertEquals("Nenhum registro com esse id foi encontrado", exception.getMessage());
+
+            verify(leilaoRepository).findByVencedorId(2L);
+        }
     }
 
-    @Test
-    void deveLancarExcecaoQuandoNaoExistiremLeiloesDoVencedor()
-    {
-        when(leilaoRepository.findByVencedorId(2L)).thenReturn(Collections.emptyList());
-
-        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarPorVencedor(2L));
-
-        assertEquals("Nenhum registro com esse id foi encontrado", exception.getMessage());
-
-        verify(leilaoRepository).findByVencedorId(2L);
-    }
     // --- GET ALL BY CRIADOR ---
 
-    @Test
-    void deveListarLeiloesPorCriadorComSucesso()
+    @Nested
+    public class listarTodosPeloCriador
     {
-        Usuario criador = UsuarioFactory.criarUsuarioPronto();
-        criador.setId(1L);
+        @Test
+        void deveListarLeiloesPorCriadorComSucesso()
+        {
+            Usuario criador = UsuarioFactory.criarUsuarioPronto();
+            criador.setId(1L);
 
-        Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
-        Item item = ItemFactory.criarItemPronto(proprietario);
+            Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+            Item item = ItemFactory.criarItemPronto(proprietario);
 
-        Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
+            Leilao leilao = LeilaoFactory.criarLeilaoPronto(item,proprietario);
 
-        leilao.setItem(item);
-        leilao.setCriador(criador);
+            leilao.setItem(item);
+            leilao.setCriador(criador);
 
-        when(leilaoRepository.findByCriadorId(1L)).thenReturn(List.of(leilao));
+            when(leilaoRepository.findByCriadorId(1L)).thenReturn(List.of(leilao));
 
-        List<LeilaoResponseDTO> resultado = leilaoService.listarPorCriadorId(1L);
+            List<LeilaoResponseDTO> resultado = leilaoService.listarPorCriadorId(1L);
 
-        assertNotNull(resultado);
-        assertEquals(1, resultado.size());
-        assertEquals(leilao.getId(), resultado.get(0).id());
+            assertNotNull(resultado);
+            assertEquals(1, resultado.size());
+            assertEquals(leilao.getId(), resultado.get(0).id());
 
-        verify(leilaoRepository).findByCriadorId(1L);
+            verify(leilaoRepository).findByCriadorId(1L);
+        }
+
+        @Test
+        void deveLancarExcecaoQuandoNaoExistiremLeiloesDoCriador()
+        {
+            when(leilaoRepository.findByCriadorId(1L)).thenReturn(Collections.emptyList());
+
+            NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarPorCriadorId(1L));
+
+            assertEquals("Nenhum registro com esse id foi encontrado", exception.getMessage());
+
+            verify(leilaoRepository).findByCriadorId(1L);
+        }
+
     }
-
-    @Test
-    void deveLancarExcecaoQuandoNaoExistiremLeiloesDoCriador()
-    {
-        when(leilaoRepository.findByCriadorId(1L)).thenReturn(Collections.emptyList());
-
-        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> leilaoService.listarPorCriadorId(1L));
-
-        assertEquals("Nenhum registro com esse id foi encontrado", exception.getMessage());
-
-        verify(leilaoRepository).findByCriadorId(1L);
-    }
-
     // --- GET BY DATA INCIAL---
 
     @Test
@@ -621,16 +684,20 @@ public class LeilaoServiceTest {
         assertEquals(1, response.size());
     }
 
-    @Test
-    void deveLancarExcecaoQuandoDatasInciaisIncorretas()
+    @Nested
+    public class lancamentoExcecaoDatasIniciaisIncorretas
     {
-        assertThrowsDataIncorreta(leilaoService::realizarBuscaPorDataInicial);
-    }
+        @Test
+        void deveLancarExcecaoQuandoDatasInciaisIncorretas()
+        {
+            assertThrowsDataIncorreta(leilaoService::realizarBuscaPorDataInicial);
+        }
 
-    @Test
-    void deveLancarExcecaoQuandoDatasIniciaisNaoExistir()
-    {
-        assertThrowsDataInexiste(leilaoService::realizarBuscaPorDataInicial);
+        @Test
+        void deveLancarExcecaoQuandoDatasIniciaisNaoExistir()
+        {
+            assertThrowsDataInexiste(leilaoService::realizarBuscaPorDataInicial);
+        }
     }
 
     // --- GET BY DATA FINAL ---
@@ -646,16 +713,20 @@ public class LeilaoServiceTest {
         assertEquals(1, response.size());
     }
 
-    @Test
-    void deveLancarExcecaoQuandoDatasFinaisIncorretas()
+    @Nested
+    public class lancamentoExcecaoDatasFinaisIncorretas
     {
-        assertThrowsDataIncorreta(leilaoService::realizarBuscarEntreDatasFinais);
-    }
+        @Test
+        void deveLancarExcecaoQuandoDatasFinaisIncorretas()
+        {
+            assertThrowsDataIncorreta(leilaoService::realizarBuscarEntreDatasFinais);
+        }
 
-    @Test
-    void deveLancarExcecaoQuandoDatasFinaisNaoExistir()
-    {
-        assertThrowsDataInexiste(leilaoService::realizarBuscarEntreDatasFinais);
+        @Test
+        void deveLancarExcecaoQuandoDatasFinaisNaoExistir()
+        {
+            assertThrowsDataInexiste(leilaoService::realizarBuscarEntreDatasFinais);
+        }
     }
 
     // --- METODO AUXILIAR ---
@@ -725,35 +796,6 @@ public class LeilaoServiceTest {
 
         NenhumRegistroException exception = assertThrows(NenhumRegistroException.class,()-> metodoService.apply(dataInicial,dataFinal));
         assertEquals("Nenhum registro encontrado com essas datas",exception.getMessage());
-    }
-
-    private static Stream<Arguments> cenariosValidacaoCriadorItem()
-    {
-        return Stream.of(
-                Arguments.of(StatusUsuario.BLOQUEADO, StatusItem.DISPONIVEL, 1L, 1L, UsuarioBloqueadoException.class),
-                Arguments.of(StatusUsuario.ATIVO,StatusItem.DISPONIVEL,2L, 1L, UsuarioNaoProprietarioException.class),
-                Arguments.of(StatusUsuario.ATIVO, StatusItem.EM_LEILAO, 1L,1L, ItemEmLeilaoException.class),
-                Arguments.of(StatusUsuario.ATIVO,StatusItem.VENDIDO,1L,1L, ItemVendidoException.class)
-        );
-    }
-
-    private static Stream<Arguments> cenariosValidacaoDatasIncorretas()
-    {
-        LocalDateTime agora = LocalDateTime.now();
-
-        return Stream.of(
-                Arguments.of(agora.minusDays(1), agora.plusDays(2), "A data de início está incorreta"),
-                Arguments.of(agora.plusDays(2), agora.plusDays(2), "A data de encerramento está incorreta"),
-                Arguments.of(agora.plusDays(3), agora.plusDays(2), "A data de encerramento está incorreta")
-        );
-    }
-
-    private static Stream<Arguments> cenariosCancelarLeilaoStatusIncorreto()
-    {
-        return Stream.of(
-                Arguments.of(StatusLeilao.CANCELADO, "Não e possível cancelar leilão, pois ele já está cancelado"),
-                Arguments.of(StatusLeilao.ABERTO, "Leilão só pode ser cancelado se estiver com status de agendado")
-        );
     }
 
     public void validarDadosLeilao(Leilao leilao, LeilaoResponseDTO leilaoResponseDTO)
