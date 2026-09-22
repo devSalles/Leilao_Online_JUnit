@@ -15,6 +15,7 @@ import LeilaoOnlineJUnit.factory.UsuarioFactory;
 import LeilaoOnlineJUnit.infra.exception.*;
 import LeilaoOnlineJUnit.repository.LanceRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -223,91 +224,104 @@ public class LanceServiceTest {
 
     // GET BY ID
 
-    @Test
-    void deveBuscarLancePorIdComSucesso() {
+    @Nested
+    public class BuscarLancePorId
+    {
+        @Test
+        void deveBuscarLancePorIdComSucesso() {
 
-        when(lanceRepository.findById(1L)).thenReturn(Optional.of(lance));
+            when(lanceRepository.findById(1L)).thenReturn(Optional.of(lance));
 
-        LanceResponseDTO resultado = lanceService.buscarLance(1L);
+            LanceResponseDTO resultado = lanceService.buscarLance(1L);
 
-        assertEquals(LanceResponseDTO.fromLance(lance), resultado);
+            assertEquals(LanceResponseDTO.fromLance(lance), resultado);
 
-        verify(lanceRepository).findById(1L);
-    }
+            verify(lanceRepository).findById(1L);
+        }
 
-    @Test
-    void deveLancarExcecaoQuandoLanceNaoEncontradoPorId() {
+        @Test
+        void deveLancarExcecaoQuandoLanceNaoEncontradoPorId() {
 
-        when(lanceRepository.findById(99L)).thenReturn(Optional.empty());
+            when(lanceRepository.findById(99L)).thenReturn(Optional.empty());
 
-        IdNaoEncontradoException excecao = assertThrows(IdNaoEncontradoException.class, () -> lanceService.buscarLance(99L));
+            IdNaoEncontradoException excecao = assertThrows(IdNaoEncontradoException.class, () -> lanceService.buscarLance(99L));
 
-        assertEquals("ID de lance não encontrado", excecao.getMessage());
+            assertEquals("ID de lance não encontrado", excecao.getMessage());
 
-        verify(lanceRepository).findById(99L);
+            verify(lanceRepository).findById(99L);
+        }
     }
 
     // GET BY ID LANCE POR LEILAO-ID
 
-    @Test
-    void deveBuscarLancesPorLeilaoComSucesso() {
+    @Nested
+    public class buscarLancePorLeilao
+    {
+        @Test
+        void deveBuscarLancesPorLeilaoComSucesso() {
 
-        Lance outroLance = LanceFactory.criarLancePronto(usuario, leilao);
+            Lance outroLance = LanceFactory.criarLancePronto(usuario, leilao);
 
-        when(lanceRepository.findByLeilaoId(leilao.getId())).thenReturn(List.of(lance, outroLance));
+            when(lanceRepository.findByLeilaoId(leilao.getId())).thenReturn(List.of(lance, outroLance));
 
-        List<LanceResponseDTO> resultado = lanceService.buscarLancesPorLeilao(leilao.getId());
+            List<LanceResponseDTO> resultado = lanceService.buscarLancesPorLeilao(leilao.getId());
 
-        assertEquals(2, resultado.size());
+            assertEquals(2, resultado.size());
 
-        assertEquals(LanceResponseDTO.fromLance(lance), resultado.get(0));
+            assertEquals(LanceResponseDTO.fromLance(lance), resultado.get(0));
 
-        assertEquals(LanceResponseDTO.fromLance(outroLance), resultado.get(1));
+            assertEquals(LanceResponseDTO.fromLance(outroLance), resultado.get(1));
 
-        verify(lanceRepository).findByLeilaoId(leilao.getId());
-    }
+            verify(lanceRepository).findByLeilaoId(leilao.getId());
+        }
 
-    @Test
-    void deveLancarExcecaoQuandoLeilaoNaoPossuiLances() {
+        @Test
+        void deveLancarExcecaoQuandoLeilaoNaoPossuiLances() {
 
-        when(lanceRepository.findByLeilaoId(1L)).thenReturn(Collections.emptyList());
+            when(lanceRepository.findByLeilaoId(1L)).thenReturn(Collections.emptyList());
 
-        NenhumRegistroException excecao = assertThrows(NenhumRegistroException.class, () -> lanceService.buscarLancesPorLeilao(1L));
+            NenhumRegistroException excecao = assertThrows(NenhumRegistroException.class, () -> lanceService.buscarLancesPorLeilao(1L));
 
-        assertEquals("Nenhum registro foi encontrado", excecao.getMessage());
+            assertEquals("Nenhum registro foi encontrado", excecao.getMessage());
 
-        verify(lanceRepository).findByLeilaoId(1L);
+            verify(lanceRepository).findByLeilaoId(1L);
+        }
     }
 
     // GET ALL
 
-    @Test
-    void deveListarTodosOsLancesComSucesso() {
+    @Nested
+    public class ListarTodosLances
+    {
+        @Test
+        void deveListarTodosOsLancesComSucesso() {
 
-        Lance outroLance = LanceFactory.criarLancePronto(usuario, leilao);
+            Lance outroLance = LanceFactory.criarLancePronto(usuario, leilao);
 
-        when(lanceRepository.findAll()).thenReturn(List.of(lance, outroLance));
+            when(lanceRepository.findAll()).thenReturn(List.of(lance, outroLance));
 
-        List<LanceResponseDTO> resultado = lanceService.listarLances();
+            List<LanceResponseDTO> resultado = lanceService.listarLances();
 
-        assertEquals(2, resultado.size());
+            assertEquals(2, resultado.size());
 
-        assertEquals(LanceResponseDTO.fromLance(lance), resultado.get(0));
+            assertEquals(LanceResponseDTO.fromLance(lance), resultado.get(0));
 
-        assertEquals(LanceResponseDTO.fromLance(outroLance), resultado.get(1));
+            assertEquals(LanceResponseDTO.fromLance(outroLance), resultado.get(1));
 
-        verify(lanceRepository).findAll();
+            verify(lanceRepository).findAll();
+        }
+
+        @Test
+        void deveLancarExcecaoQuandoNaoExistemLances() {
+
+            when(lanceRepository.findAll()).thenReturn(List.of());
+
+            NenhumRegistroException excecao = assertThrows(NenhumRegistroException.class, () -> lanceService.listarLances());
+
+            assertEquals("Nenhum registro foi encontrado", excecao.getMessage());
+
+            verify(lanceRepository).findAll();
+        }
     }
 
-    @Test
-    void deveLancarExcecaoQuandoNaoExistemLances() {
-
-        when(lanceRepository.findAll()).thenReturn(List.of());
-
-        NenhumRegistroException excecao = assertThrows(NenhumRegistroException.class, () -> lanceService.listarLances());
-
-        assertEquals("Nenhum registro foi encontrado", excecao.getMessage());
-
-        verify(lanceRepository).findAll();
-    }
 }
