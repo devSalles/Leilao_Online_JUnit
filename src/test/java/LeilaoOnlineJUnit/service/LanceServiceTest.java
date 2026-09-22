@@ -100,126 +100,137 @@ public class LanceServiceTest {
         verify(lanceRepository, never()).save(any());
     }
 
-    @Test
-    void deveLancarExcecaoQuandoUsuarioEstiverBloqueado() {
+    @Nested
+    public class verificarStatusLeilao
+    {
+        @Test
+        void deveLancarExcecaoQuandoUsuarioEstiverBloqueado() {
 
-        participante.setStatusUsuario(StatusUsuario.BLOQUEADO);
+            participante.setStatusUsuario(StatusUsuario.BLOQUEADO);
 
-        when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
+            when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
 
-        when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
+            when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
 
-        LanceRequestDTO request = new LanceRequestDTO(new BigDecimal("15000.00"), participante.getId(), leilao.getId());
+            LanceRequestDTO request = new LanceRequestDTO(new BigDecimal("15000.00"), participante.getId(), leilao.getId());
 
-        assertThrows(UsuarioBloqueadoException.class, () -> lanceService.realizarLance(request));
+            assertThrows(UsuarioBloqueadoException.class, () -> lanceService.realizarLance(request));
 
-        verify(lanceRepository, never()).save(any());
+            verify(lanceRepository, never()).save(any());
+        }
+
+        @Test
+        void deveLancarExcecaoQuandoLeilaoNaoEstiverAberto() {
+
+            leilao.setStatusLeilao(StatusLeilao.AGENDADO);
+
+            when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
+
+            when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
+
+            LanceRequestDTO request = new LanceRequestDTO(new BigDecimal("15000.00"), participante.getId(), leilao.getId());
+
+            assertThrows(LeilaoNaoAbertoException.class, () -> lanceService.realizarLance(request));
+
+            verify(lanceRepository, never()).save(any());
+        }
     }
 
-    @Test
-    void deveLancarExcecaoQuandoLeilaoNaoEstiverAberto() {
+    @Nested
+    public class validarUsuario
+    {
+        @Test
+        void deveLancarExcecaoQuandoPrimeiroLanceForMenorQueValorInicial() {
 
-        leilao.setStatusLeilao(StatusLeilao.AGENDADO);
+            leilao.getItem().setValorInicial(new BigDecimal("20000.00"));
 
-        when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
+            LanceRequestDTO request = new LanceRequestDTO(new BigDecimal("15000.00"), participante.getId(), leilao.getId());
 
-        when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
+            when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
 
-        LanceRequestDTO request = new LanceRequestDTO(new BigDecimal("15000.00"), participante.getId(), leilao.getId());
+            when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
 
-        assertThrows(LeilaoNaoAbertoException.class, () -> lanceService.realizarLance(request));
+            when(lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao)).thenReturn(Optional.empty());
 
-        verify(lanceRepository, never()).save(any());
+            assertThrows(PrimeiroLanceInvaidoException.class, () -> lanceService.realizarLance(request));
+
+            verify(lanceRepository, never()).save(any());
+        }
+
+        @Test
+        void deveAceitarPrimeiroLanceIgualAoValorInicial() {
+
+            leilao.getItem().setValorInicial(new BigDecimal("15000.00"));
+
+            LanceRequestDTO request = new LanceRequestDTO(new BigDecimal("15000.00"), participante.getId(), leilao.getId());
+
+            when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
+
+            when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
+
+            when(lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao)).thenReturn(Optional.empty());
+
+            LanceResponseDTO response = lanceService.realizarLance(request);
+
+            assertNotNull(response);
+            verify(lanceRepository).save(any(Lance.class));
+        }
     }
 
-    @Test
-    void deveLancarExcecaoQuandoValorDoLanceForInvalido() {
+    @Nested
+    public class validarLances
+    {
+        @Test
+        void deveLancarExcecaoQuandoLanceForMenorOuIgualAoMaiorLance() {
 
-        when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
+            Lance maiorLance = LanceFactory.criarLancePersonalizado(2L, new BigDecimal("20000.00"), lance.getDataHora(), leilao, usuario);
 
-        when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
+            when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
 
-        assertAll(
-                () -> assertThrows(ValorLanceInvalidoException.class, () -> lanceService.realizarLance(new LanceRequestDTO(null, participante.getId(), leilao.getId()))),
-                () -> assertThrows(ValorLanceInvalidoException.class, () -> lanceService.realizarLance(new LanceRequestDTO(BigDecimal.ZERO, participante.getId(), leilao.getId()))),
-                () -> assertThrows(ValorLanceInvalidoException.class, () -> lanceService.realizarLance(new LanceRequestDTO(new BigDecimal("-10"), participante.getId(), leilao.getId())))
-        );
+            when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
 
-        verify(lanceRepository, never()).save(any());
-    }
+            when(lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao)).thenReturn(Optional.of(maiorLance));
 
-    @Test
-    void deveLancarExcecaoQuandoPrimeiroLanceForMenorQueValorInicial() {
+            assertAll(() -> assertThrows(LanceInvalidoException.class, () -> lanceService.realizarLance(new LanceRequestDTO(new BigDecimal("15000.00"), participante.getId(), leilao.getId()))),
+                    () -> assertThrows(LanceInvalidoException.class, () -> lanceService.realizarLance(new LanceRequestDTO(new BigDecimal("20000.00"), participante.getId(), leilao.getId())))
+            );
 
-        leilao.getItem().setValorInicial(new BigDecimal("20000.00"));
+            verify(lanceRepository, never()).save(any());
+        }
 
-        LanceRequestDTO request = new LanceRequestDTO(new BigDecimal("15000.00"), participante.getId(), leilao.getId());
+        @Test
+        void deveAceitarLanceMaiorQueMaiorLance() {
 
-        when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
+            Lance maiorLance = LanceFactory.criarLancePersonalizado(2L, new BigDecimal("20000.00"), lance.getDataHora(), leilao, usuario);
 
-        when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
+            when(lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao)).thenReturn(Optional.of(maiorLance));
 
-        when(lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao)).thenReturn(Optional.empty());
+            when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
 
-        assertThrows(PrimeiroLanceInvaidoException.class, () -> lanceService.realizarLance(request));
+            when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
 
-        verify(lanceRepository, never()).save(any());
-    }
+            LanceRequestDTO request = new LanceRequestDTO(new BigDecimal("25000.00"), participante.getId(), leilao.getId());
 
-    @Test
-    void deveAceitarPrimeiroLanceIgualAoValorInicial() {
+            LanceResponseDTO response = lanceService.realizarLance(request);
 
-        leilao.getItem().setValorInicial(new BigDecimal("15000.00"));
+            assertNotNull(response);
+            verify(lanceRepository).save(any(Lance.class));
+        }
+        @Test
+        void deveLancarExcecaoQuandoValorDoLanceForInvalido() {
 
-        LanceRequestDTO request = new LanceRequestDTO(new BigDecimal("15000.00"), participante.getId(), leilao.getId());
+            when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
 
-        when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
+            when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
 
-        when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
+            assertAll(
+                    () -> assertThrows(ValorLanceInvalidoException.class, () -> lanceService.realizarLance(new LanceRequestDTO(null, participante.getId(), leilao.getId()))),
+                    () -> assertThrows(ValorLanceInvalidoException.class, () -> lanceService.realizarLance(new LanceRequestDTO(BigDecimal.ZERO, participante.getId(), leilao.getId()))),
+                    () -> assertThrows(ValorLanceInvalidoException.class, () -> lanceService.realizarLance(new LanceRequestDTO(new BigDecimal("-10"), participante.getId(), leilao.getId())))
+            );
 
-        when(lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao)).thenReturn(Optional.empty());
-
-        LanceResponseDTO response = lanceService.realizarLance(request);
-
-        assertNotNull(response);
-        verify(lanceRepository).save(any(Lance.class));
-    }
-
-    @Test
-    void deveLancarExcecaoQuandoLanceForMenorOuIgualAoMaiorLance() {
-
-        Lance maiorLance = LanceFactory.criarLancePersonalizado(2L, new BigDecimal("20000.00"), lance.getDataHora(), leilao, usuario);
-
-        when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
-
-        when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
-
-        when(lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao)).thenReturn(Optional.of(maiorLance));
-
-        assertAll(() -> assertThrows(LanceInvalidoException.class, () -> lanceService.realizarLance(new LanceRequestDTO(new BigDecimal("15000.00"), participante.getId(), leilao.getId()))),
-                () -> assertThrows(LanceInvalidoException.class, () -> lanceService.realizarLance(new LanceRequestDTO(new BigDecimal("20000.00"), participante.getId(), leilao.getId())))
-        );
-
-        verify(lanceRepository, never()).save(any());
-    }
-
-    @Test
-    void deveAceitarLanceMaiorQueMaiorLance() {
-
-        Lance maiorLance = LanceFactory.criarLancePersonalizado(2L, new BigDecimal("20000.00"), lance.getDataHora(), leilao, usuario);
-
-        when(lanceRepository.findFirstByLeilaoOrderByValorDesc(leilao)).thenReturn(Optional.of(maiorLance));
-
-        when(usuarioService.buscarIdUsuario(participante.getId())).thenReturn(participante);
-
-        when(leilaoService.buscarLeilaoID(leilao.getId())).thenReturn(leilao);
-
-        LanceRequestDTO request = new LanceRequestDTO(new BigDecimal("25000.00"), participante.getId(), leilao.getId());
-
-        LanceResponseDTO response = lanceService.realizarLance(request);
-
-        assertNotNull(response);
-        verify(lanceRepository).save(any(Lance.class));
+            verify(lanceRepository, never()).save(any());
+        }
     }
 
     // GET BY ID
