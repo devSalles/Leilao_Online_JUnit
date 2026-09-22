@@ -51,7 +51,7 @@ public class ItemServiceTest {
         when(usuarioService.buscarIdUsuario(proprietario.getId())).thenReturn(proprietario);
 
         ItemResquestDTO itemRequest = new ItemResquestDTO("Bicicleta","Excelente estado",
-                "veíclos",new BigDecimal("2500.00"), proprietario.getId());
+                "veículos",new BigDecimal("2500.00"), proprietario.getId());
 
         //Act
         ItemResponseDTO itemResponseDTO = itemService.salvarItem(itemRequest);
