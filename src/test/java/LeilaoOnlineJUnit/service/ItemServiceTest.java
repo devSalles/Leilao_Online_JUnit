@@ -43,7 +43,6 @@ public class ItemServiceTest {
     ItemService itemService;
 
     @Nested
-    @DisplayName("salvarItem")
     class SalvarItem {
 
         @Test
@@ -96,7 +95,6 @@ public class ItemServiceTest {
     }
 
     @Nested
-    @DisplayName("atualizarItem")
     class AtualizarItem {
 
         @Test
@@ -188,7 +186,6 @@ public class ItemServiceTest {
     }
 
     @Nested
-    @DisplayName("buscarTodosItems")
     class BuscarTodosItems {
 
         @Test
@@ -232,7 +229,6 @@ public class ItemServiceTest {
     }
 
     @Nested
-    @DisplayName("buscarItem")
     class BuscarItem {
 
         @Test
@@ -270,7 +266,6 @@ public class ItemServiceTest {
     }
 
     @Nested
-    @DisplayName("buscarPorCategoria")
     class BuscarPorCategoria {
 
         @Test
@@ -307,7 +302,6 @@ public class ItemServiceTest {
     }
 
     @Nested
-    @DisplayName("buscarItemPorStatus")
     class BuscarItemPorStatus {
 
         @Test
@@ -365,7 +359,6 @@ public class ItemServiceTest {
     }
 
     @Nested
-    @DisplayName("buscarItemPorProprietario")
     class BuscarItemPorProprietario {
 
         @Test
@@ -405,7 +398,6 @@ public class ItemServiceTest {
     }
 
     @Nested
-    @DisplayName("buscarPorNome")
     class BuscarPorNome {
 
         @Test
