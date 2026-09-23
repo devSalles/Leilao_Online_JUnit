@@ -42,7 +42,6 @@ public class UsuarioServiceTest {
     UsuarioService usuarioService;
 
     @Nested
-    @DisplayName("salvarUsuario")
     class SalvarUsuario {
 
         @Test
@@ -91,7 +90,6 @@ public class UsuarioServiceTest {
     }
 
     @Nested
-    @DisplayName("atualizarUsuario")
     class AtualizarUsuario {
 
         @Test
@@ -136,7 +134,6 @@ public class UsuarioServiceTest {
     }
 
     @Nested
-    @DisplayName("exibirPorId")
     class ExibirPorId {
 
         @Test
@@ -170,7 +167,6 @@ public class UsuarioServiceTest {
     }
 
     @Nested
-    @DisplayName("exibirTodosUsuarios")
     class ExibirTodosUsuarios {
 
         @Test
@@ -208,7 +204,6 @@ public class UsuarioServiceTest {
     }
 
     @Nested
-    @DisplayName("exibirPorCpf")
     class ExibirPorCpf {
 
         @Test
@@ -249,7 +244,6 @@ public class UsuarioServiceTest {
     }
 
     @Nested
-    @DisplayName("exibirPorEmail")
     class ExibirPorEmail {
 
         @Test
@@ -287,7 +281,6 @@ public class UsuarioServiceTest {
     }
 
     @Nested
-    @DisplayName("exibirPorStatus")
     class ExibirPorStatus {
 
         @Test
@@ -324,7 +317,6 @@ public class UsuarioServiceTest {
     }
 
     @Nested
-    @DisplayName("bloquearUsuario")
     class BloquearUsuario {
 
         @Test
@@ -364,7 +356,6 @@ public class UsuarioServiceTest {
     }
 
     @Nested
-    @DisplayName("desbloquearUsuario")
     class DesbloquearUsuario {
 
         @Test
@@ -403,7 +394,6 @@ public class UsuarioServiceTest {
     }
 
     @Nested
-    @DisplayName("removerUsuario")
     class RemoverUsuario {
 
         @Test
