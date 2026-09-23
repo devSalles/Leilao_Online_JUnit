@@ -11,6 +11,8 @@ import LeilaoOnlineJUnit.infra.exception.*;
 import LeilaoOnlineJUnit.repository.ItemRepository;
 import LeilaoOnlineJUnit.repository.LeilaoRepository;
 import LeilaoOnlineJUnit.repository.UsuarioRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -27,7 +29,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 public class UsuarioServiceTest {
 
-
     @Mock
     UsuarioRepository usuarioRepository;
 
@@ -40,425 +41,431 @@ public class UsuarioServiceTest {
     @InjectMocks
     UsuarioService usuarioService;
 
-    // --- POST Usuario ---
+    @Nested
+    @DisplayName("salvarUsuario")
+    class SalvarUsuario {
 
-    @Test
-    void deveSalvarUsuario()
-    {
-        //Arrange
-        UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo","bernardo@gmail.com","499.215.310-00");
+        @Test
+        void deveSalvarUsuario() {
+            //Arrange
+            UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo", "bernardo@gmail.com", "499.215.310-00");
 
-        //Act
-        UsuarioResponseDTO usuarioResponse = usuarioService.salvarUsuario(usuarioRequestDTO);
+            //Act
+            UsuarioResponseDTO usuarioResponse = usuarioService.salvarUsuario(usuarioRequestDTO);
 
-        //Assert
-        assertEquals("Bernardo",usuarioResponse.nome());
-        assertEquals("bernardo@gmail.com",usuarioResponse.email());
-        assertEquals("49921531000",usuarioResponse.cpf());
+            //Assert
+            assertEquals("Bernardo", usuarioResponse.nome());
+            assertEquals("bernardo@gmail.com", usuarioResponse.email());
+            assertEquals("49921531000", usuarioResponse.cpf());
 
-        usuarioRepository.save(any(Usuario.class));
+            usuarioRepository.save(any(Usuario.class));
+        }
+
+        @Test
+        void lancarExcecaoQuandoEmailExistente() {
+            //Arrange
+            UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo", "bernardo@gmail.com", "715.159.700-27");
+
+            when(usuarioRepository.existsByEmail(usuarioRequestDTO.email())).thenReturn(true);
+
+            //Act
+            assertThrows(EmailRepetidoException.class, () -> usuarioService.salvarUsuario(usuarioRequestDTO));
+
+            //Assert
+            verify(usuarioRepository, never()).save(any(Usuario.class));
+        }
+
+        @Test
+        void deveLancarExcecaoQuandoCpfExistente() {
+            //Arrange
+            UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo", "bernardo@gmail.com", "110.969.290-07");
+
+            //Act
+            when(usuarioRepository.existsByCpf("11096929007")).thenReturn(true);
+
+            //Assert
+            assertThrows(CpfRepetidoException.class, () -> usuarioService.salvarUsuario(usuarioRequestDTO));
+
+            verify(usuarioRepository, never()).save(any(Usuario.class));
+        }
     }
 
-    @Test
-    void lancarExcecaoQuandoEmailExistente()
-    {
-        //Arrange
-        UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo","bernardo@gmail.com","715.159.700-27");
+    @Nested
+    @DisplayName("atualizarUsuario")
+    class AtualizarUsuario {
 
-        when(usuarioRepository.existsByEmail(usuarioRequestDTO.email())).thenReturn(true);
+        @Test
+        void atualizarUsuario() {
+            //Arrange
+            Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
-        //Act
-        assertThrows(EmailRepetidoException.class,()->usuarioService.salvarUsuario(usuarioRequestDTO));
+            UsuarioUpdateRequestDTO usuarioUpdtRequestDTO = new UsuarioUpdateRequestDTO("Bernardo", "bernardo@gmail.com");
 
-        //Assert
-        verify(usuarioRepository,never()).save(any(Usuario.class));
+            when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+            when(usuarioRepository.existsByEmailAndIdNot(usuarioUpdtRequestDTO.email(), usuario.getId())).thenReturn(false);
+
+            //Act
+            UsuarioResponseDTO usuarioResponse = usuarioService.atualizarUsuario(usuario.getId(), usuarioUpdtRequestDTO);
+
+            //Assert
+            assertEquals("Bernardo", usuarioResponse.nome());
+            assertEquals("bernardo@gmail.com", usuarioResponse.email());
+
+            verify(usuarioRepository, times(1)).findById(usuario.getId());
+            verify(usuarioRepository).save(any(Usuario.class));
+        }
+
+        @Test
+        void lancarExcecaoQuandoEmailRepetido() {
+            //Arrange
+            Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+            UsuarioUpdateRequestDTO usuarioUpdateRequestDTO = new UsuarioUpdateRequestDTO("Bernardo", "bernardo@gmail.com");
+
+            when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+            when(usuarioRepository.existsByEmailAndIdNot(usuarioUpdateRequestDTO.email(), usuario.getId())).thenReturn(true);
+
+            //Act
+            EmailRepetidoException emailRepetidoException = assertThrows(EmailRepetidoException.class, () -> usuarioService.atualizarUsuario(usuario.getId(), usuarioUpdateRequestDTO));
+
+            //Assert
+            assertEquals("Email já cadastrado", emailRepetidoException.getMessage());
+
+            verify(usuarioRepository, never()).save(any(Usuario.class));
+            verify(usuarioRepository).findById(usuario.getId());
+        }
     }
 
-    @Test
-    void deveLancarExcecaoQuandoCpfExistente()
-    {
-        //Arrange
-        UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo","bernardo@gmail.com","110.969.290-07");
+    @Nested
+    @DisplayName("exibirPorId")
+    class ExibirPorId {
 
-        //Act
-        when(usuarioRepository.existsByCpf("11096929007")).thenReturn(true);
+        @Test
+        void buscarUsuarioPorId() {
+            //Arrange
+            Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
-        //Assert
-        assertThrows(CpfRepetidoException.class,()->usuarioService.salvarUsuario(usuarioRequestDTO));
+            when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
 
-        verify(usuarioRepository,never()).save(any(Usuario.class));
+            //Act
+            UsuarioResponseDTO usuarioResponse = usuarioService.exibirPorId(usuario.getId());
+
+            //Assert
+            verify(usuarioRepository, times(1)).findById(usuario.getId());
+
+            validarDadosUsuario(usuario, usuarioResponse);
+        }
+
+        @Test
+        void deveLancarExcecaoQuandoIdUsuarioNaoEncontrado() {
+            //Arrange
+            when(usuarioRepository.findById(1L)).thenReturn(Optional.empty());
+
+            //Act
+            IdNaoEncontradoException idNaoEncontradoException = assertThrows(IdNaoEncontradoException.class, () -> usuarioService.exibirPorId(1L));
+            assertEquals("Usuário não encontrado", idNaoEncontradoException.getMessage());
+
+            //Assert
+            verify(usuarioRepository, times(1)).findById(1L);
+        }
     }
 
-    //--- PUT Usuario ---
+    @Nested
+    @DisplayName("exibirTodosUsuarios")
+    class ExibirTodosUsuarios {
 
-    @Test
-    void atualizarUsuario()
-    {
-        //Arrange
-        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+        @Test
+        void pesquisarTodosOsUsarios() {
+            //Arrange
+            Usuario pedro = UsuarioFactory.criarUsuarioPersonalizado(1L, "pedro", "60687400058", StatusUsuario.ATIVO);
+            Usuario carlos = UsuarioFactory.criarUsuarioPersonalizado(2L, "carlos", "18695885097", StatusUsuario.ATIVO);
 
-        UsuarioUpdateRequestDTO usuarioUpdtRequestDTO = new UsuarioUpdateRequestDTO("Bernardo","bernardo@gmail.com");
+            when(usuarioRepository.findAll()).thenReturn(List.of(pedro, carlos));
 
-        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
-        when(usuarioRepository.existsByEmailAndIdNot(usuarioUpdtRequestDTO.email(), usuario.getId())).thenReturn(false);
+            //Act
 
-        //Act
-        UsuarioResponseDTO usuarioResponse = usuarioService.atualizarUsuario(usuario.getId(),usuarioUpdtRequestDTO);
+            List<UsuarioResponseDTO> usuarioResponse = usuarioService.exibirTodosUsuarios();
 
-        //Assert
-        assertEquals("Bernardo",usuarioResponse.nome());
-        assertEquals("bernardo@gmail.com",usuarioResponse.email());
+            //Assert
+            assertNotNull(usuarioResponse);
+            assertEquals(2, usuarioResponse.size());
+            assertEquals("pedro", usuarioResponse.get(0).nome());
+            assertEquals("carlos", usuarioResponse.get(1).nome());
 
-        verify(usuarioRepository,times(1)).findById(usuario.getId());
-        verify(usuarioRepository).save(any(Usuario.class));
+            verify(usuarioRepository).findAll();
+        }
+
+        @Test
+        void lancarExcecaoQuandoListaEstiverVazia() {
+            //Arrange
+            when(usuarioRepository.findAll()).thenReturn(List.of());
+
+            //Act
+            assertThrows(NenhumRegistroException.class, () -> usuarioService.exibirTodosUsuarios());
+
+            //Assert
+            verify(usuarioRepository).findAll();
+        }
     }
 
-    @Test
-    void lancarExcecaoQuandoEmailRepetido()
-    {
-        //Arrange
-        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
-        UsuarioUpdateRequestDTO usuarioUpdateRequestDTO = new UsuarioUpdateRequestDTO("Bernardo","bernardo@gmail.com");
+    @Nested
+    @DisplayName("exibirPorCpf")
+    class ExibirPorCpf {
 
-        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
-        when(usuarioRepository.existsByEmailAndIdNot(usuarioUpdateRequestDTO.email(), usuario.getId())).thenReturn(true);
+        @Test
+        void buscarPorCPF() {
+            //Arrange
+            String cpf = "06693512020";
+            Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
-        //Act
-        EmailRepetidoException emailRepetidoException = assertThrows(EmailRepetidoException.class,()-> usuarioService.atualizarUsuario(usuario.getId(), usuarioUpdateRequestDTO));
+            when(usuarioRepository.findByCpf(cpf)).thenReturn(usuario);
 
-        //Assert
-        assertEquals("Email já cadastrado",emailRepetidoException.getMessage());
+            //Act
+            UsuarioResponseDTO usuarioCpfResponse = usuarioService.exibirPorCpf(cpf);
 
-        verify(usuarioRepository,never()).save(any(Usuario.class));
-        verify(usuarioRepository).findById(usuario.getId());
+            //Assert
+            assertNotNull(usuarioCpfResponse);
+            assertEquals("06693512020", usuarioCpfResponse.cpf());
+
+            verify(usuarioRepository).findByCpf(usuario.getCpf());
+
+            validarDadosUsuario(usuario, usuarioCpfResponse);
+        }
+
+        @Test
+        void deveLancarExcecaoQuandoCpfNaoEncontrado() {
+            // Arrange
+            String cpf = "79451761004";
+
+            when(usuarioRepository.findByCpf(cpf)).thenReturn(null);
+
+            // Act
+            CpfNaoEncontradoException exception = assertThrows(CpfNaoEncontradoException.class, () -> usuarioService.exibirPorCpf(cpf));
+
+            // Assert
+            assertEquals("Cpf não encontrado", exception.getMessage());
+
+            verify(usuarioRepository).findByCpf("79451761004");
+        }
     }
 
-    // --- GET ID ---
+    @Nested
+    @DisplayName("exibirPorEmail")
+    class ExibirPorEmail {
 
-    @Test
-    void buscarUsuarioPorId()
-    {
-        //Arrange
-        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+        @Test
+        void realizarBuscarPorEmail() {
+            //Arrange
+            String email = "bernardo89@gmail.com";
+            Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
-        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+            when(usuarioRepository.findByEmail(email)).thenReturn(usuario);
 
-        //Act
-        UsuarioResponseDTO usuarioResponse = usuarioService.exibirPorId(usuario.getId());
+            //Act
+            UsuarioResponseDTO usuarioResponse = usuarioService.exibirPorEmail(email);
 
-        //Assert
-        verify(usuarioRepository,times(1)).findById(usuario.getId());
+            //Assert
+            validarDadosUsuario(usuario, usuarioResponse);
 
-        validarDadosUsuario(usuario,usuarioResponse);
+            verify(usuarioRepository).findByEmail(email);
+        }
+
+        @Test
+        void lancarExcecaoQuandoEmailNaoEncontrado() {
+            //Arrange
+            String email = "bernardo@gmail.com";
+
+            when(usuarioRepository.findByEmail(email)).thenReturn(null);
+
+            //Act
+            EmailNaoEncontradoException exception = assertThrows(EmailNaoEncontradoException.class, () -> usuarioService.exibirPorEmail(email));
+
+            //Assert
+            assertEquals("Email não encontrado", exception.getMessage());
+
+            verify(usuarioRepository).findByEmail(email);
+        }
     }
 
-    @Test
-    void deveLancarExcecaoQuandoIdUsuarioNaoEncontrado()
-    {
-        //Arrange
-        when(usuarioRepository.findById(1L)).thenReturn(Optional.empty());
+    @Nested
+    @DisplayName("exibirPorStatus")
+    class ExibirPorStatus {
 
-        //Act
-        IdNaoEncontradoException idNaoEncontradoException = assertThrows(IdNaoEncontradoException.class,()-> usuarioService.exibirPorId(1L));
-        assertEquals("Usuário não encontrado",idNaoEncontradoException.getMessage());
+        @Test
+        void buscarPorStatus() {
+            //Arrange
+            StatusUsuario statusUsuario = StatusUsuario.ATIVO;
+            Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
-        //Assert
-        verify(usuarioRepository,times(1)).findById(1L);
+            when(usuarioRepository.findByStatusUsuario(statusUsuario)).thenReturn(List.of(usuario));
+
+            //Act
+            List<UsuarioResponseDTO> usuarioResponseDTO = usuarioService.exibirPorStatus(statusUsuario);
+
+            //Assert
+            assertNotNull(usuarioResponseDTO);
+            assertEquals(1, usuarioResponseDTO.size());
+
+            validarDadosUsuario(usuario, usuarioResponseDTO.getFirst());
+
+            verify(usuarioRepository).findByStatusUsuario(statusUsuario);
+        }
+
+        @Test
+        void lancarExcecaoQuandoStatusNaoEncontrado() {
+            StatusUsuario statusUsuario = StatusUsuario.BLOQUEADO;
+
+            when(usuarioRepository.findByStatusUsuario(statusUsuario)).thenReturn(List.of());
+
+            NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> usuarioService.exibirPorStatus(statusUsuario));
+            assertEquals("Nenhum registro foi encontrado com esse status", exception.getMessage());
+
+            verify(usuarioRepository).findByStatusUsuario(statusUsuario);
+        }
     }
 
-    //---GET ALL ---
+    @Nested
+    @DisplayName("bloquearUsuario")
+    class BloquearUsuario {
 
-    @Test
-    void pesquisarTodosOsUsarios()
-    {
-        //Arrange
-        Usuario pedro = UsuarioFactory.criarUsuarioPersonalizado(1L,"pedro","60687400058",StatusUsuario.ATIVO);
-        Usuario carlos = UsuarioFactory.criarUsuarioPersonalizado(2L,"carlos","18695885097",StatusUsuario.ATIVO);
+        @Test
+        void deveBloquearUsuarioAtivo() {
+            // Arrange
+            Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
-        when(usuarioRepository.findAll()).thenReturn(List.of(pedro,carlos));
+            when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
 
-        //Act
+            // Act
+            UsuarioResponseDTO usuarioResponseDTO = usuarioService.bloquearUsuario(usuario.getId());
 
-        List<UsuarioResponseDTO> usuarioResponse = usuarioService.exibirTodosUsuarios();
+            // Assert
+            validarDadosUsuario(usuario, usuarioResponseDTO);
 
-        //Assert
-        assertNotNull(usuarioResponse);
-        assertEquals(2,usuarioResponse.size());
-        assertEquals("pedro",usuarioResponse.get(0).nome());
-        assertEquals("carlos",usuarioResponse.get(1).nome());
+            assertEquals(StatusUsuario.BLOQUEADO, usuario.getStatusUsuario());
 
-        verify(usuarioRepository).findAll();
+            verify(usuarioRepository).findById(usuario.getId());
+            verify(usuarioRepository).save(usuario);
+        }
+
+        @Test
+        void lancarExcecaoQuandoUsuarioJaEstiverBloqueado() {
+            //Arrange
+            Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo", "18968230099", StatusUsuario.BLOQUEADO);
+
+            when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+
+            //Act
+            UsuarioBloqueadoException exception = assertThrows(UsuarioBloqueadoException.class, () -> usuarioService.bloquearUsuario(usuario.getId()));
+
+            //Assert
+            assertEquals("Usuario já está bloqueado", exception.getMessage());
+
+            verify(usuarioRepository).findById(usuario.getId());
+        }
     }
 
-    @Test
-    void lancarExcecaoQuandoListaEstiverVazia()
-    {
-        //Arrange
-        when(usuarioRepository.findAll()).thenReturn(List.of());
+    @Nested
+    @DisplayName("desbloquearUsuario")
+    class DesbloquearUsuario {
 
-        //Act
-        assertThrows(NenhumRegistroException.class,()-> usuarioService.exibirTodosUsuarios());
+        @Test
+        void deveDesBloquearUsuarioBloqueado() {
 
-        //Assert
-        verify(usuarioRepository).findAll();
+            //Arrange
+            Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo", "18968230099", StatusUsuario.BLOQUEADO);
+
+            when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+
+            //Act
+            UsuarioResponseDTO usuarioResponseDTO = usuarioService.desbloquearUsuario(usuario.getId());
+
+            //Assert
+            validarDadosUsuario(usuario, usuarioResponseDTO);
+
+            assertEquals(StatusUsuario.ATIVO, usuario.getStatusUsuario());
+            verify(usuarioRepository).findById(usuario.getId());
+            verify(usuarioRepository).save(usuario);
+        }
+
+        @Test
+        void lancarExcecaoCasoTenteDesbloquearUsuarioAtivo() {
+            //Arrange
+            Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo", "18968230099", StatusUsuario.ATIVO);
+
+            when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+
+            //Act
+            UsuarioAtivoException exception = assertThrows(UsuarioAtivoException.class, () -> usuarioService.desbloquearUsuario(usuario.getId()));
+            assertEquals("Usuário já está ativo", exception.getMessage());
+
+            //Assert
+            verify(usuarioRepository).findById(usuario.getId());
+        }
     }
 
-    //--- GET CPF ---
+    @Nested
+    @DisplayName("removerUsuario")
+    class RemoverUsuario {
 
-    @Test
-    void buscarPorCPF()
-    {
-        //Arrange
-        String cpf = "06693512020";
-        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+        @Test
+        void realizarExclusaoDeUsuario() {
+            Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
-        when(usuarioRepository.findByCpf(cpf)).thenReturn(usuario);
+            when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
 
-        //Act
-        UsuarioResponseDTO usuarioCpfResponse = usuarioService.exibirPorCpf(cpf);
+            UsuarioResponseDTO response = usuarioService.removerUsuario(usuario.getId());
+            validarDadosUsuario(usuario, response);
 
-        //Assert
-        assertNotNull(usuarioCpfResponse);
-        assertEquals("06693512020",usuarioCpfResponse.cpf());
+            verify(usuarioRepository).findById(usuario.getId());
+            verify(usuarioRepository, times(1)).delete(usuario);
+            verify(usuarioRepository).delete(any(Usuario.class));
+        }
 
-        verify(usuarioRepository).findByCpf(usuario.getCpf());
+        @Test
+        void verificarSeUsuarioPossuiItemVinculado() {
+            //Arrange
+            Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
-        validarDadosUsuario(usuario,usuarioCpfResponse);
-    }
+            when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+            when(itemRepository.existsByProprietarioIdAndLeilaoIdIsNotNull(usuario.getId())).thenReturn(true);
 
-    @Test
-    void deveLancarExcecaoQuandoCpfNaoEncontrado()
-    {
-        // Arrange
-        String cpf = "79451761004";
+            //Act
+            PossuiItemEmLeilaoException exception = assertThrows(PossuiItemEmLeilaoException.class, () -> usuarioService.removerUsuario(usuario.getId()));
 
-        when(usuarioRepository.findByCpf(cpf)).thenReturn(null);
+            //Assert
+            assertEquals("Usuário possui item vinculados a leilão", exception.getMessage());
 
-        // Act
-        CpfNaoEncontradoException exception = assertThrows(CpfNaoEncontradoException.class, () -> usuarioService.exibirPorCpf(cpf));
+            verify(usuarioRepository).findById(usuario.getId());
+            verify(itemRepository).existsByProprietarioIdAndLeilaoIdIsNotNull(usuario.getId());
+            verify(usuarioRepository, never()).delete(usuario);
+        }
 
-        // Assert
-        assertEquals("Cpf não encontrado", exception.getMessage());
+        @Test
+        void verificarSeUsuarioPossuiPossuiLeilaoAtivo() {
+            //Arrange
+            Usuario criadorLeilao = UsuarioFactory.criarUsuarioPronto();
 
-        verify(usuarioRepository).findByCpf("79451761004");
-    }
+            when(usuarioRepository.findById(criadorLeilao.getId())).thenReturn(Optional.of(criadorLeilao));
+            when(leilaoRepository.existsByCriadorIdAndStatusLeilaoIn(criadorLeilao.getId(), List.of(StatusLeilao.AGENDADO, StatusLeilao.ABERTO))).thenReturn(true);
 
-    //--- GET EMAIL ---
+            //Act
+            PossuiLeilaoAtivoException exception = assertThrows(PossuiLeilaoAtivoException.class, () -> usuarioService.removerUsuario(criadorLeilao.getId()));
 
-    @Test
-    void realizarBuscarPorEmail()
-    {
-        //Arrange
-        String email = "bernardo89@gmail.com";
-        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
+            //Assert
+            assertEquals("Usuário possui leilão ativo", exception.getMessage());
 
-        when(usuarioRepository.findByEmail(email)).thenReturn(usuario);
-
-        //Act
-        UsuarioResponseDTO usuarioResponse = usuarioService.exibirPorEmail(email);
-
-        //Assert
-        validarDadosUsuario(usuario,usuarioResponse);
-
-        verify(usuarioRepository).findByEmail(email);
-    }
-
-    @Test
-    void lancarExcecaoQuandoEmailNaoEncontrado()
-    {
-        //Arrange
-        String email = "bernardo@gmail.com";
-
-        when(usuarioRepository.findByEmail(email)).thenReturn(null);
-
-        //Act
-        EmailNaoEncontradoException exception = assertThrows(EmailNaoEncontradoException.class,()->usuarioService.exibirPorEmail(email));
-
-        //Assert
-        assertEquals("Email não encontrado",exception.getMessage());
-
-        verify(usuarioRepository).findByEmail(email);
-    }
-
-    //--- GET STATUS ---
-
-    @Test
-    void buscarPorStatus()
-    {
-        //Arrange
-        StatusUsuario statusUsuario = StatusUsuario.ATIVO;
-        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
-
-        when(usuarioRepository.findByStatusUsuario(statusUsuario)).thenReturn(List.of(usuario));
-
-        //Act
-        List<UsuarioResponseDTO> usuarioResponseDTO = usuarioService.exibirPorStatus(statusUsuario);
-
-        //Assert
-        assertNotNull(usuarioResponseDTO);
-        assertEquals(1,usuarioResponseDTO.size());
-
-        validarDadosUsuario(usuario,usuarioResponseDTO.getFirst());
-
-        verify(usuarioRepository).findByStatusUsuario(statusUsuario);
-    }
-
-    @Test
-    void lancarExcecaoQuandoStatusNaoEncontrado()
-    {
-        StatusUsuario statusUsuario = StatusUsuario.BLOQUEADO;
-
-        when(usuarioRepository.findByStatusUsuario(statusUsuario)).thenReturn(List.of());
-
-        NenhumRegistroException exception = assertThrows(NenhumRegistroException.class,()->usuarioService.exibirPorStatus(statusUsuario));
-        assertEquals("Nenhum registro foi encontrado com esse status",exception.getMessage());
-
-        verify(usuarioRepository).findByStatusUsuario(statusUsuario);
-    }
-
-    // --- BLOQUEAR USUÁRIO ---
-
-    @Test
-    void deveBloquearUsuarioAtivo()
-    {
-        // Arrange
-        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
-
-        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
-
-        // Act
-        UsuarioResponseDTO usuarioResponseDTO = usuarioService.bloquearUsuario(usuario.getId());
-
-        // Assert
-        validarDadosUsuario(usuario, usuarioResponseDTO);
-
-        assertEquals(StatusUsuario.BLOQUEADO, usuario.getStatusUsuario());
-
-        verify(usuarioRepository).findById(usuario.getId());
-        verify(usuarioRepository).save(usuario);
-    }
-
-    @Test
-    void lancarExcecaoQuandoUsuarioJaEstiverBloqueado()
-    {
-        //Arrange
-        Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L,"Bernardo","18968230099",StatusUsuario.BLOQUEADO);
-
-        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
-
-        //Act
-        UsuarioBloqueadoException exception = assertThrows(UsuarioBloqueadoException.class,()->usuarioService.bloquearUsuario(usuario.getId()));
-
-        //Assert
-        assertEquals("Usuario já está bloqueado",exception.getMessage());
-
-        verify(usuarioRepository).findById(usuario.getId());
-    }
-
-    //--- DESBLOQUEAR USUÁRIO
-
-    @Test
-    void deveDesBloquearUsuarioBloqueado()
-    {
-
-        //Arrange
-        Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L,"Bernardo","18968230099",StatusUsuario.BLOQUEADO);
-
-        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
-
-        //Act
-        UsuarioResponseDTO usuarioResponseDTO = usuarioService.desbloquearUsuario(usuario.getId());
-
-        //Assert
-        validarDadosUsuario(usuario, usuarioResponseDTO);
-
-        assertEquals(StatusUsuario.ATIVO, usuario.getStatusUsuario());
-        verify(usuarioRepository).findById(usuario.getId());
-        verify(usuarioRepository).save(usuario);
-    }
-
-    @Test
-    void lancarExcecaoCasoTenteDesbloquearUsuarioAtivo()
-    {
-        //Arrange
-        Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L,"Bernardo","18968230099",StatusUsuario.ATIVO);
-
-        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
-
-        //Act
-        UsuarioAtivoException exception = assertThrows(UsuarioAtivoException.class,()->usuarioService.desbloquearUsuario(usuario.getId()));
-        assertEquals("Usuário já está ativo",exception.getMessage());
-
-        //Assert
-        verify(usuarioRepository).findById(usuario.getId());
-    }
-
-    // --- REMOVER USUÁRIO ---
-
-    @Test
-    void realizarExclusaoDeUsuario()
-    {
-        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
-
-        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
-
-        UsuarioResponseDTO response = usuarioService.removerUsuario(usuario.getId());
-        validarDadosUsuario(usuario, response);
-
-        verify(usuarioRepository).findById(usuario.getId());
-        verify(usuarioRepository,times(1)).delete(usuario);
-        verify(usuarioRepository).delete(any(Usuario.class));
-    }
-
-    @Test
-    void verificarSeUsuarioPossuiItemVinculado()
-    {
-        //Arrange
-        Usuario usuario = UsuarioFactory.criarUsuarioPronto();
-
-        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
-        when(itemRepository.existsByProprietarioIdAndLeilaoIdIsNotNull(usuario.getId())).thenReturn(true);
-
-        //Act
-        PossuiItemEmLeilaoException exception = assertThrows(PossuiItemEmLeilaoException.class,()->usuarioService.removerUsuario(usuario.getId()));
-
-        //Assert
-        assertEquals("Usuário possui item vinculados a leilão",exception.getMessage());
-
-        verify(usuarioRepository).findById(usuario.getId());
-        verify(itemRepository).existsByProprietarioIdAndLeilaoIdIsNotNull(usuario.getId());
-        verify(usuarioRepository,never()).delete(usuario);
-    }
-
-    @Test
-    void verificarSeUsuarioPossuiPossuiLeilaoAtivo()
-    {
-        //Arrange
-        Usuario criadorLeilao = UsuarioFactory.criarUsuarioPronto();
-
-
-        when(usuarioRepository.findById(criadorLeilao.getId())).thenReturn(Optional.of(criadorLeilao));
-        when(leilaoRepository.existsByCriadorIdAndStatusLeilaoIn(criadorLeilao.getId(), List.of(StatusLeilao.AGENDADO,StatusLeilao.ABERTO))).thenReturn(true);
-
-        //Act
-        PossuiLeilaoAtivoException exception = assertThrows(PossuiLeilaoAtivoException.class,()->usuarioService.removerUsuario(criadorLeilao.getId()));
-
-        //Assert
-        assertEquals("Usuário possui leilão ativo",exception.getMessage());
-
-        verify(usuarioRepository).findById(criadorLeilao.getId());
-        verify(leilaoRepository).existsByCriadorIdAndStatusLeilaoIn(criadorLeilao.getId(),List.of(StatusLeilao.AGENDADO,StatusLeilao.ABERTO)) ;
-        verify(usuarioRepository,never()).delete(criadorLeilao);
+            verify(usuarioRepository).findById(criadorLeilao.getId());
+            verify(leilaoRepository).existsByCriadorIdAndStatusLeilaoIn(criadorLeilao.getId(), List.of(StatusLeilao.AGENDADO, StatusLeilao.ABERTO));
+            verify(usuarioRepository, never()).delete(criadorLeilao);
+        }
     }
 
     // --- METODO AUXILIAR ---
 
-    private void validarDadosUsuario(Usuario usuario, UsuarioResponseDTO usuarioResponseDTO)
-    {
-        assertAll(()-> assertNotNull(usuarioResponseDTO),
-                ()-> assertEquals(usuario.getId(),usuarioResponseDTO.id()),
-                ()-> assertEquals(usuario.getNome(),usuarioResponseDTO.nome()),
-                ()-> assertEquals(usuario.getEmail(),usuarioResponseDTO.email())
+    private void validarDadosUsuario(Usuario usuario, UsuarioResponseDTO usuarioResponseDTO) {
+        assertAll(() -> assertNotNull(usuarioResponseDTO),
+                () -> assertEquals(usuario.getId(), usuarioResponseDTO.id()),
+                () -> assertEquals(usuario.getNome(), usuarioResponseDTO.nome()),
+                () -> assertEquals(usuario.getEmail(), usuarioResponseDTO.email())
         );
     }
 }
