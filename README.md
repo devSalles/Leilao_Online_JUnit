@@ -56,8 +56,10 @@ A camada de negócio concentra as regras do sistema, enquanto a camada de testes
 
 <div align="center">
 
-![Arquitetura do Projeto](./Leilão%20JUnit.jpg)
-
+<img width="846" height="1181" alt="Leilão JUnit" src="https://github.com/user-attachments/assets/efda7bc9-851e-4dc7-8ac5-0517c74d0ebc" />
+  
 </div>
+
+---
 
 ---
