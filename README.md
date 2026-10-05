@@ -62,4 +62,8 @@ A camada de negócio concentra as regras do sistema, enquanto a camada de testes
 
 ---
 
+# 🔄 Fluxo de Dados
+
+<img width="951" height="1051" alt="Leilão JUnit Fluxo_De_Dados" src="https://github.com/user-attachments/assets/157f5a46-48b3-4eb5-a5a5-d2f079975509" />
+
 ---
