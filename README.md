@@ -45,3 +45,19 @@ A aplicação simula um sistema de **leilão online**, envolvendo o gerenciament
 O sistema possui regras para **agendamento, abertura, cancelamento e encerramento de leilões**, controle de usuários, validação de lances, definição automática do vencedor e transferência de propriedade do item quando o leilão é encerrado com um vencedor.
 
 O principal objetivo foi validar essas regras por meio de testes unitários utilizando **JUnit 5**, **Mockito** e **JaCoCo**, garantindo maior confiabilidade e qualidade do código.
+
+---
+
+# 🏗️ Arquitetura do Projeto
+
+A aplicação foi estruturada utilizando uma arquitetura organizada em camadas, separando as responsabilidades entre **Controllers, Services, DTOs, Repositories, Entities e Tests**.
+
+A camada de negócio concentra as regras do sistema, enquanto a camada de testes possui **Factories** para facilitar a criação dos objetos utilizados nos testes unitários.
+
+<div align="center">
+
+![Arquitetura do Projeto](./Leilão%20JUnit.jpg)
+
+</div>
+
+---
