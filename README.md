@@ -67,3 +67,11 @@ A camada de negócio concentra as regras do sistema, enquanto a camada de testes
 <img width="951" height="1051" alt="Leilão JUnit Fluxo_De_Dados" src="https://github.com/user-attachments/assets/157f5a46-48b3-4eb5-a5a5-d2f079975509" />
 
 ---
+
+## 🧪 Estratégia de Testes
+
+Os testes unitários foram concentrados na camada **Service**, responsável por implementar e validar toda a lógica de negócio da aplicação.
+
+| 🏗️ Camadas testadas | 🧪 Estratégias utilizadas |
+| :--- | :--- |
+| - ✅ UsuarioService<br>- ✅ ItemService<br>- ✅ LeilaoService<br>- ✅ LanceService | - ✅ Mock de Repositories<br>- ✅ Mock de Services<br>- ✅ Factories para criação de objetos<br>- ✅ Testes de sucesso e exceção<br>- ✅ Validação de regras de negócio<br>- ✅ Validação do fluxo de leilões<br>- ✅ Validação das regras de lances<br>- ✅ Validação de estados de usuários, itens e leilões<br>- ✅ Validação de valores e maior lance |
