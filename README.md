@@ -440,3 +440,106 @@ As regras de negócio do sistema permitem a implementação de diferentes cenár
 A complexidade do domínio permite a criação de aproximadamente **90 a 130 testes unitários**, dependendo da quantidade de cenários implementados.
 
 O conjunto de regras foi desenvolvido para proporcionar a prática de **Spring Boot, JUnit 5, Mockito e modelagem de regras de negócio**, utilizando um domínio semelhante aos encontrados em sistemas corporativos.
+
+---
+
+# 🌐 API REST
+
+A API REST do sistema de Leilão Online é organizada em controladores responsáveis pelo gerenciamento dos usuários, itens, leilões e lances.
+
+---
+
+# 👤 Usuários
+
+Base URL:
+
+```text
+/usuario
+```
+
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| POST | `/salvar-usuario` | Cadastra um novo usuário. |
+| PUT | `/atualizar-usuario/{idUser}` | Atualiza os dados de um usuário. |
+| PATCH | `/bloquear-usuario/{idUser}` | Bloqueia um usuário. |
+| PATCH | `/desbloquear-usuario/{idUsuario}` | Desbloqueia um usuário. |
+| GET | `/exibir-por-id/{idUser}` | Busca um usuário pelo ID. |
+| GET | `/exibir-todos` | Lista todos os usuários. |
+| GET | `/exibir-por-cpf/{cpf}` | Busca um usuário pelo CPF. |
+| GET | `/exibir-por-email/{email}` | Busca um usuário pelo e-mail. |
+| GET | `/exibir-por-status/{statusUsuario}` | Lista usuários pelo status. |
+| DELETE | `/remover-usuario/{idUsuario}` | Remove um usuário, respeitando as regras de negócio. |
+
+---
+
+## Cadastrar Usuário
+
+**Endpoint**
+
+```http
+POST /usuario/salvar-usuario
+```
+
+Cadastra um novo usuário no sistema.
+
+O usuário é criado inicialmente com status `ATIVO`, respeitando as validações de nome, CPF e e-mail.
+
+### Corpo da requisição
+
+```json
+{
+  "nome": "Bernardo Salles",
+  "email": "bernardo.salles@example.com",
+  "cpf": "529.982.247-25"
+}
+```
+---
+
+# 📦 Itens
+
+Base URL:
+
+```text
+/item
+```
+
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| POST | `/salvar-item` | Cadastra um novo item. |
+| PUT | `/atualizar-item/{idItem}` | Atualiza os dados de um item. |
+| GET | `/buscar-todos` | Lista todos os itens cadastrados. |
+| GET | `/buscar-item/{idItem}` | Busca um item pelo ID. |
+| GET | `/buscar-categoria/{categoria}` | Lista itens por categoria. |
+| GET | `/buscar-status/{statusItem}` | Lista itens pelo status. |
+| GET | `/buscar-proprietario/{proprietarioId}` | Lista itens de um determinado proprietário. |
+| GET | `/buscar-nome/{nome}` | Lista itens pelo nome. |
+| DELETE | `/remover-item/{idItem}` | Remove um item, respeitando as regras de negócio. |
+
+---
+
+## Cadastrar Item
+
+**Endpoint**
+
+```http
+POST /item/salvar-item
+```
+
+Cadastra um novo item no sistema.
+
+O item deve possuir nome, descrição, categoria, valor inicial e um proprietário válido.
+
+### Corpo da requisição
+
+```json
+{
+  "nomeItem": "Notebook Dell Latitude",
+  "descricaoItem": "Notebook Dell Latitude 3520, Intel Core i7, 16GB RAM e SSD de 512GB.",
+  "categoriaItem": "Eletrônicos",
+  "valorInicialItem": 2500.00,
+  "proprietarioItemId": 1
+}
+```
+
+> O campo `proprietarioItemId` representa a chave estrangeira (FK) do usuário proprietário. Neste exemplo, o item será vinculado ao usuário de ID `1`.
+
