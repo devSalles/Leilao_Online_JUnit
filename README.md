@@ -101,4 +101,16 @@ O projeto utiliza o **JaCoCo** para análise da cobertura dos testes unitários,
 - ✅ **100%** de cobertura de métodos.
 - ✅ **100%** de cobertura das classes da camada **Service**.
 
----
+--- 
+# 🎯 Objetivos
+
+- Desenvolver uma API REST para gerenciamento de leilões online utilizando Spring Boot.
+- Implementar regras de negócio relacionadas a usuários, itens, leilões e lances.
+- Garantir o controle dos estados dos leilões, incluindo AGENDADO, ABERTO, ENCERRADO e CANCELADO.
+- Validar as regras de realização de lances, incluindo valor mínimo, maior lance e restrições de usuários.
+- Implementar o cálculo automático do vencedor e a atualização do maior lance.
+- Automatizar a transferência de propriedade do item ao vencedor do leilão.
+- Garantir a integridade dos relacionamentos entre usuários, itens, leilões e lances.
+- Validar regras de cancelamento, encerramento e atualização de leilões.
+- Aplicar testes unitários para validar regras de negócio, exceções e fluxos de estados.
+- Utilizar JUnit 5 e Mockito para garantir a confiabilidade e a qualidade da aplicação.
