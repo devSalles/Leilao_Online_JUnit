@@ -114,3 +114,57 @@ O projeto utiliza o **JaCoCo** para análise da cobertura dos testes unitários,
 - Validar regras de cancelamento, encerramento e atualização de leilões.
 - Aplicar testes unitários para validar regras de negócio, exceções e fluxos de estados.
 - Utilizar JUnit 5 e Mockito para garantir a confiabilidade e a qualidade da aplicação.
+--- 
+
+# 📁 Estrutura do Projeto
+
+```text
+LeilaoOnlineJUnit
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── LeilaoOnlineJUnit
+│   │   │       ├── controller
+│   │   │       │
+│   │   │       ├── dto
+│   │   │       │   ├── item
+│   │   │       │   ├── lance
+│   │   │       │   ├── leilao
+│   │   │       │   └── usuario
+│   │   │       │
+│   │   │       ├── entity
+│   │   │       │
+│   │   │       ├── Enum
+│   │   │       │
+│   │   │       ├── infra
+│   │   │       │   ├── core
+│   │   │       │   └── exception
+│   │   │       │
+│   │   │       ├── repository
+│   │   │       │
+│   │   │       ├── service
+│   │   │       │
+│   │   │       └── LeilaoOnlineJUnitApplication.java
+│   │   │
+│   │   └── resources
+│   │       └── application.properties
+│   │
+│   └── test
+│       └── java
+│           └── LeilaoOnlineJUnit
+│               ├── factory
+│               │   
+│               │   
+│               │   
+│               │   
+│               │
+│               ├── service
+│               │   
+│               │   
+│               │   
+│               │   
+│               │
+│               └── LeilaoOnlineJUnitApplicationTests.java
+│
+└── pom.xml
+```
