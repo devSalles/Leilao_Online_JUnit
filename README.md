@@ -75,3 +75,30 @@ Os testes unitários foram concentrados na camada **Service**, responsável por 
 | 🏗️ Camadas testadas | 🧪 Estratégias utilizadas |
 | :--- | :--- |
 | - ✅ UsuarioService<br>- ✅ ItemService<br>- ✅ LeilaoService<br>- ✅ LanceService | - ✅ Mock de Repositories<br>- ✅ Mock de Services<br>- ✅ Factories para criação de objetos<br>- ✅ Testes de sucesso e exceção<br>- ✅ Validação de regras de negócio<br>- ✅ Validação do fluxo de leilões<br>- ✅ Validação das regras de lances<br>- ✅ Validação de estados de usuários, itens e leilões<br>- ✅ Validação de valores e maior lance |
+
+---
+
+## 📊 Cobertura dos Testes
+
+O projeto utiliza o **JaCoCo** para análise da cobertura dos testes unitários, garantindo que as principais regras de negócio estejam devidamente validadas.
+
+### Relatório de Cobertura
+
+<p align="center">
+<img width="1041" height="194" alt="RelatorioJaCoCo" src="https://github.com/user-attachments/assets/5a62697d-4ae8-4b74-b719-0e2e90ada541" />
+
+</p>
+<br>
+<p align="center">
+<img width="667" height="149" alt="RelatorioIntellij" src="https://github.com/user-attachments/assets/657fab3a-0799-4238-b755-5d860bed543f" />
+</p>
+
+
+### Resultados
+
+- ✅ **100%** de cobertura de instruções.
+- ✅ **100%** de cobertura de branches.
+- ✅ **100%** de cobertura de métodos.
+- ✅ **100%** de cobertura das classes da camada **Service**.
+
+---
