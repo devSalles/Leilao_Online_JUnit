@@ -4,6 +4,7 @@ import LeilaoOnlineJUnit.dto.lance.LanceRequestDTO;
 import LeilaoOnlineJUnit.dto.lance.LanceResponseDTO;
 import LeilaoOnlineJUnit.service.ItemService;
 import LeilaoOnlineJUnit.service.LanceService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/lance")
 @RequiredArgsConstructor
+@Tag(name = "Lance")
 public class LanceController {
 
     private final LanceService lanceService;

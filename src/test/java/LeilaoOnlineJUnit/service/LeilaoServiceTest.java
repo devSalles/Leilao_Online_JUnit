@@ -285,6 +285,33 @@ public class LeilaoServiceTest {
             verify(leilaoRepository).existsByItemIdAndStatusLeilaoIn(outroItem.getId(), List.of(StatusLeilao.AGENDADO, StatusLeilao.ABERTO));
             verify(leilaoRepository, never()).save(any(Leilao.class));
         }
+
+        @Test
+        void deveAtualizarLeilaoTrocandoParaOutroItemNaoVinculado() {
+            Usuario criador = UsuarioFactory.criarUsuarioPronto();
+            Item itemAtual = ItemFactory.criarItemPronto(criador);
+            Item outroItem = ItemFactory.criarItemPersonalizado(2L, "Civic", "Excelente estado", "veículos", StatusItem.DISPONIVEL, criador);
+
+            Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2),
+                    StatusLeilao.AGENDADO, itemAtual, criador);
+
+            LeilaoRequestDTO request = new LeilaoRequestDTO(LocalDateTime.now().plusDays(3), LocalDateTime.now().plusDays(4),
+                    outroItem.getId(), criador.getId());
+
+            when(leilaoRepository.findById(leilao.getId())).thenReturn(Optional.of(leilao));
+            when(itemService.buscarID(outroItem.getId())).thenReturn(outroItem);
+            when(usuarioService.buscarIdUsuario(criador.getId())).thenReturn(criador);
+            when(leilaoRepository.existsByItemIdAndStatusLeilaoIn(outroItem.getId(), List.of(StatusLeilao.AGENDADO, StatusLeilao.ABERTO)))
+                    .thenReturn(false);
+
+            LeilaoResponseDTO response = leilaoService.atualizarLeilao(leilao.getId(), request);
+
+            validarDadosLeilao(leilao, response);
+            assertEquals(outroItem.getId(), response.idItem());
+
+            verify(leilaoRepository).existsByItemIdAndStatusLeilaoIn(outroItem.getId(), List.of(StatusLeilao.AGENDADO, StatusLeilao.ABERTO));
+            verify(leilaoRepository).save(leilao);
+        }
     }
 
     @Nested
