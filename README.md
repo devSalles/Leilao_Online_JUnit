@@ -598,3 +598,52 @@ A data de início deve ser futura e a data de encerramento deve ser posterior à
 `idItem` representa a chave estrangeira (FK) do item que será leiloado e `idCriador` representa a chave estrangeira (FK) do usuário responsável pela criação do leilão. Neste exemplo, ambos estão vinculados ao ID `1`.
 
 ---
+
+# 💰 Lances
+
+Base URL:
+
+```text
+/lance
+```
+
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| POST | `/realizar-lance` | Realiza um novo lance em um leilão. |
+| GET | `/buscar-lance/{id}` | Busca um lance pelo ID. |
+| GET | `/buscar-lances-leilao/{idLeilao}` | Lista os lances realizados em um leilão. |
+| GET | `/listar-lances` | Lista todos os lances cadastrados. |
+
+## Realizar Lance
+
+**Endpoint**
+
+```http
+POST /lance/realizar-lance
+```
+
+Realiza um novo lance em um leilão, respeitando as regras de negócio relacionadas ao valor do lance, status do leilão e situação do usuário.
+
+### Corpo
+
+```json
+{
+  "valorLance": 3000.00,
+  "idUsuario": 2,
+  "idLeilao": 1
+}
+```
+
+leilão deve estar com status `ABERTO` para aceitar lances  (para abrir leilão ele deve estar na data correspondente)
+
+`idUsuario` é a chave estrangeira que referencia o usuário responsável pelo lance.
+
+`idUsuario` não pode ser o mesmo ID que o usuário criador do Item.
+
+`idLeilao` é a chave estrangeira que referencia o leilão no qual o lance será realizado.
+
+O campo `valorLance` deve ser maior que `0.01` e pode possuir no máximo 10 dígitos inteiros e 2 casas decimais.
+
+A data e hora do lance são registradas automaticamente pela aplicação.
+
+---
