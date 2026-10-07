@@ -541,5 +541,60 @@ O item deve possuir nome, descrição, categoria, valor inicial e um proprietár
 }
 ```
 
-> O campo `proprietarioItemId` representa a chave estrangeira (FK) do usuário proprietário. Neste exemplo, o item será vinculado ao usuário de ID `1`.
+O campo `proprietarioItemId` representa a chave estrangeira (FK) do usuário proprietário. Neste exemplo, o item será vinculado ao usuário de ID `1`.
 
+---
+
+# 🏷️ Leilões
+
+Base URL:
+
+```text
+/leilao
+```
+
+| Método | Endpoint | Descrição |
+| :--- | :--- | :--- |
+| POST | `/agendar-leilão` | Agenda um novo leilão. |
+| PUT | `/atualizar-leilao/{idLeilao}` | Atualiza os dados de um leilão agendado. |
+| PUT | `/abrir-leilao/{idLeilao}` | Abre um leilão agendado para receber lances. |
+| PUT | `/cancelar-leilao/{idLeilao}` | Cancela um leilão que ainda não possui lances. |
+| PUT | `/encerrar-leilao/{idLeilao}` | Encerra um leilão e define o vencedor, quando houver. |
+| GET | `/listar-todos` | Lista todos os leilões cadastrados. |
+| GET | `/buscar-id/{idLeilao}` | Busca um leilão pelo ID. |
+| GET | `/buscar-por-status/{statusLeilao}` | Lista leilões pelo status. |
+| GET | `/buscar-por-vencedor/{idVencedor}` | Lista leilões pelo ID do vencedor. |
+| GET | `/buscar-por-criador/{idCriador}` | Lista leilões pelo ID do criador. |
+| GET | `/buscar-por-data-inicial` | Busca leilões dentro de um período pela data inicial. |
+| GET | `/buscar-por-data-final` | Busca leilões dentro de um período pela data final. |
+
+---
+
+## Agendar Leilão
+
+**Endpoint**
+
+```http
+POST /leilao/agendar-leilão
+```
+
+Agenda um novo leilão no sistema.
+
+Todo novo leilão é criado inicialmente com status `AGENDADO`.
+
+A data de início deve ser futura e a data de encerramento deve ser posterior à data de início.
+
+### Corpo da requisição
+
+```json
+{
+  "dataInicio": "2026-10-10T10:00:00",
+  "dataFim": "2026-10-15T18:00:00",
+  "idItem": 1,
+  "idCriador": 1
+}
+```
+
+`idItem` representa a chave estrangeira (FK) do item que será leiloado e `idCriador` representa a chave estrangeira (FK) do usuário responsável pela criação do leilão. Neste exemplo, ambos estão vinculados ao ID `1`.
+
+---
