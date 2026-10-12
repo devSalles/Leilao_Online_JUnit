@@ -259,7 +259,7 @@ public class LeilaoService {
             throw new DataInicioLeilaoException();
         }
 
-        if (LocalDateTime.now().isAfter(leilao.getDataFim())) {
+        if (!LocalDateTime.now().isBefore(leilao.getDataFim())) {
             throw new DataIncorretaException("Não é possível abrir um leilão após sua data final.");
         }
     }
