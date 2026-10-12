@@ -324,25 +324,7 @@ public class ItemServiceTest {
         }
 
         @Test
-        void excecaoQuandoNenhumItemEncontradoPorStatus() {
-            // Arrange
-            StatusItem statusItem = StatusItem.VENDIDO;
-
-            when(itemRepository.findByStatusItem(statusItem)).thenReturn(List.of());
-
-            // Act
-            NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> itemService.buscarItemPorStatus(statusItem));
-
-            // Assert
-            assertEquals("Nenhum registro de status encontrado", exception.getMessage());
-
-            verify(itemRepository).findByStatusItem(statusItem);
-        }
-
-        // Estava sob o comentário "GET BY CATEGORIA" no original, mas testa buscarItemPorStatus
-        // (parece duplicado de excecaoQuandoNenhumItemEncontradoPorStatus acima — vale revisar)
-        @Test
-        void excecaoQuandoNenhumRegistroEncontrado() {
+        void excecaoQuandoNenhumRegistroEncontradoQuandoRealizadoPesquisaPorStatus() {
             // Arrange
             StatusItem statusItem = StatusItem.VENDIDO;
 
