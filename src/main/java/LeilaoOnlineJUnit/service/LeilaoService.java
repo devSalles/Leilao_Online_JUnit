@@ -258,6 +258,10 @@ public class LeilaoService {
         {
             throw new DataInicioLeilaoException();
         }
+
+        if (LocalDateTime.now().isAfter(leilao.getDataFim())) {
+            throw new DataIncorretaException("Não é possível abrir um leilão após sua data final.");
+        }
     }
 
     private List<LeilaoResponseDTO> realizarBuscaEntreDatas(LocalDate dataInicial, LocalDate dataFinal, BiFunction<LocalDateTime, LocalDateTime, List<Leilao>> leilao)
