@@ -377,6 +377,21 @@ public class LeilaoServiceTest {
 
             verify(leilaoRepository).findById(leilao.getId());
         }
+
+        @Test
+        void excecaoQuandoDataFinalDoLeilaoJaPassou() {
+            Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
+            Item item = ItemFactory.criarItemPronto(proprietario);
+            Leilao leilao = LeilaoFactory.criarLeilaoPersonalizado(1L, LocalDateTime.now().minusHours(2), LocalDateTime.now().minusHours(1),
+                    StatusLeilao.AGENDADO, item, proprietario);
+
+            when(leilaoRepository.findById(1L)).thenReturn(Optional.of(leilao));
+
+            assertThrows(DataIncorretaException.class, () -> leilaoService.abrirLeilao(1L));
+
+            verify(leilaoRepository, never()).save(any(Leilao.class));
+        }
+
     }
 
     @Nested
