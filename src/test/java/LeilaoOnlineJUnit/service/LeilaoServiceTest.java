@@ -465,6 +465,13 @@ public class LeilaoServiceTest {
             assertEquals(vencedor.getId(), response.idVencedor());
             assertEquals(StatusItem.VENDIDO, response.statusItem());
 
+            assertAll(
+                    () -> assertEquals(StatusLeilao.ENCERRADO, leilao.getStatusLeilao()),
+                    () -> assertEquals(StatusItem.VENDIDO, itemAtual.getStatusItem()),
+                    () -> assertEquals(vencedor.getId(), itemAtual.getProprietario().getId()),
+                    () -> assertEquals(vencedor.getId(), leilao.getVencedor().getId())
+            );
+
             verify(leilaoRepository).save(leilao);
             verify(lanceRepository).findFirstByLeilaoOrderByValorDesc(leilao);
         }
