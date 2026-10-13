@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -84,6 +85,19 @@ public class LanceServiceTest {
             LanceResponseDTO response = lanceService.realizarLance(request);
 
             assertNotNull(response);
+
+            ArgumentCaptor<Lance> captor = ArgumentCaptor.forClass(Lance.class);
+            verify(lanceRepository).save(captor.capture());
+
+            Lance lanceSalvo = captor.getValue();
+
+            assertAll(
+                    () -> assertEquals(request.valorLance(), lanceSalvo.getValor()),
+                    () -> assertEquals(participante.getId(), lanceSalvo.getUsuario().getId()),
+                    () -> assertEquals(leilao.getId(), lanceSalvo.getLeilao().getId()),
+                    () -> assertNotNull(lanceSalvo.getDataHora())
+            );
+
             verify(lanceRepository).save(any(Lance.class));
         }
 
