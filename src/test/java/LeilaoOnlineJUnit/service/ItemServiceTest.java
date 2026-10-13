@@ -47,7 +47,6 @@ public class ItemServiceTest {
 
         @Test
         void registrarItens() {
-            // Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
 
             when(usuarioService.buscarIdUsuario(proprietario.getId())).thenReturn(proprietario);
@@ -55,10 +54,8 @@ public class ItemServiceTest {
             ItemResquestDTO itemRequest = new ItemResquestDTO("Bicicleta", "Excelente estado",
                     "veículos", new BigDecimal("2500.00"), proprietario.getId());
 
-            //Act
             ItemResponseDTO itemResponseDTO = itemService.salvarItem(itemRequest);
 
-            //Assert
             assertNotNull(itemResponseDTO);
 
             verify(usuarioService).buscarIdUsuario(proprietario.getId());
@@ -75,7 +72,6 @@ public class ItemServiceTest {
 
         @Test
         void lancarExcecaoQuandoPropritarioNaoExistir() {
-            //Arrange
             Long idProprietario = 100L;
 
             when(usuarioService.buscarIdUsuario(idProprietario)).thenThrow(new IdNaoEncontradoException("Usuário não encontrado"));
@@ -83,10 +79,8 @@ public class ItemServiceTest {
             ItemResquestDTO itemRequest = new ItemResquestDTO("Bicicleta", "Excelente estado",
                     "veíclos", new BigDecimal("2500.00"), idProprietario);
 
-            //Act
             IdNaoEncontradoException exception = assertThrows(IdNaoEncontradoException.class, () -> itemService.salvarItem(itemRequest));
 
-            //Assert
             assertEquals("Usuário não encontrado", exception.getMessage());
 
             verify(usuarioService).buscarIdUsuario(idProprietario);
@@ -99,7 +93,6 @@ public class ItemServiceTest {
 
         @Test
         void atualizarItem() {
-            //Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
             Item item = ItemFactory.criarItemPronto(proprietario);
 
@@ -108,10 +101,8 @@ public class ItemServiceTest {
             ItemUpdateRequestDTO itemUpdateDTO = new ItemUpdateRequestDTO("Carro", "perfeito estado",
                     "Veículo", new BigDecimal("20.00"));
 
-            //Act
             ItemResponseDTO responde = itemService.atualizarItem(item.getId(), itemUpdateDTO);
 
-            //Assert
             validarDadosItem(item, responde);
 
             verify(itemRepository).save(any(Item.class));
@@ -120,7 +111,6 @@ public class ItemServiceTest {
 
         @Test
         void lancarExcecaoCasoItemEstiverEmLeilao() {
-            //Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
             Item item = ItemFactory.criarItemPersonalizado(1L, "Iphone", "perfeito estado", "telefone"
                     , StatusItem.EM_LEILAO, proprietario);
@@ -130,10 +120,8 @@ public class ItemServiceTest {
             ItemUpdateRequestDTO itemUpdateDTO = new ItemUpdateRequestDTO("Carro", "perfeito estado",
                     "Veículo", new BigDecimal("20.00"));
 
-            //Act
             ItemEmLeilaoException exception = assertThrows(ItemEmLeilaoException.class, () -> itemService.atualizarItem(item.getId(), itemUpdateDTO));
 
-            //Assert
             assertEquals("Um item em leilão não pode ser editado", exception.getMessage());
 
             verify(itemRepository, never()).save(any(Item.class));
@@ -142,7 +130,6 @@ public class ItemServiceTest {
 
         @Test
         void lancarExcecaoQuandoTentarAtualizarItemVendido() {
-            //Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
             Item item = ItemFactory.criarItemPersonalizado(1L, "Iphone", "perfeito estado", "telefone"
                     , StatusItem.VENDIDO, proprietario);
@@ -152,10 +139,8 @@ public class ItemServiceTest {
             ItemUpdateRequestDTO itemUpdateDTO = new ItemUpdateRequestDTO("Carro", "perfeito estado",
                     "Veículo", new BigDecimal("20.00"));
 
-            //Act
             ItemVendidoException exception = assertThrows(ItemVendidoException.class, () -> itemService.atualizarItem(item.getId(), itemUpdateDTO));
 
-            //Assert
             assertEquals("Item vendido não pode ser editado", exception.getMessage());
 
             verify(itemRepository, never()).save(any(Item.class));
@@ -165,7 +150,6 @@ public class ItemServiceTest {
         @Test
         void lancarExcecaoQuandoIdProprietarioInexistente() {
 
-            //Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
             Item item = ItemFactory.criarItemPronto(proprietario);
 
@@ -174,10 +158,8 @@ public class ItemServiceTest {
             ItemUpdateRequestDTO itemUpdateDTO = new ItemUpdateRequestDTO("Carro", "perfeito estado",
                     "Veículo", new BigDecimal("20.00"));
 
-            //Act
             IdNaoEncontradoException exception = assertThrows(IdNaoEncontradoException.class, () -> itemService.atualizarItem(item.getId(), itemUpdateDTO));
 
-            //Assert
             assertEquals("Id de item não encontrado", exception.getMessage());
 
             verify(itemRepository, never()).save(any(Item.class));
@@ -190,7 +172,6 @@ public class ItemServiceTest {
 
         @Test
         void listarTodosItensCadastrados() {
-            // Arrange
             Usuario proprietarioUm = UsuarioFactory.criarUsuarioPersonalizado(1L, "rafael", "34257599065", StatusUsuario.ATIVO);
 
             Item itemUm = ItemFactory.criarItemPersonalizado(1L, "Bike", "perfeito estado", "transporte", StatusItem.EM_LEILAO, proprietarioUm);
@@ -201,10 +182,8 @@ public class ItemServiceTest {
 
             when(itemRepository.findAll()).thenReturn(List.of(itemUm, itemDois));
 
-            // Act
             List<ItemResponseDTO> response = itemService.buscarTodosItems();
 
-            // Assert
             assertNotNull(response);
             assertEquals(2, response.size());
             assertEquals(itemUm.getNome(), response.get(0).nomeItem());
@@ -215,13 +194,10 @@ public class ItemServiceTest {
 
         @Test
         void lancarExcecaoQuandoNaoRetornarNenhumRegistro() {
-            // Arrange
             when(itemRepository.findAll()).thenReturn(List.of());
 
-            // Act
             NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> itemService.buscarTodosItems());
 
-            // Assert
             assertEquals("Nenhum registro cadastrado", exception.getMessage());
 
             verify(itemRepository).findAll();
@@ -233,16 +209,13 @@ public class ItemServiceTest {
 
         @Test
         void retornarItemPorId() {
-            // Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
             Item item = ItemFactory.criarItemPronto(proprietario);
 
             when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
 
-            // Act
             ItemResponseDTO response = itemService.buscarItem(item.getId());
 
-            // Assert
             validarDadosItem(item, response);
 
             verify(itemRepository).findById(item.getId());
@@ -250,15 +223,12 @@ public class ItemServiceTest {
 
         @Test
         void retornarExcecaoQuandoIdDeItemNaoEncontrado() {
-            // Arrange
             Long id = 111L;
 
             when(itemRepository.findById(id)).thenReturn(Optional.empty());
 
-            // Act
             IdNaoEncontradoException exception = assertThrows(IdNaoEncontradoException.class, () -> itemService.buscarItem(id));
 
-            // Assert
             assertEquals("Id de item não encontrado", exception.getMessage());
 
             verify(itemRepository).findById(id);
@@ -270,16 +240,13 @@ public class ItemServiceTest {
 
         @Test
         void buscarItemPorCategoria() {
-            // Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
             Item item = ItemFactory.criarItemPronto(proprietario);
 
             when(itemRepository.findByCategoria(item.getCategoria())).thenReturn(List.of(item));
 
-            // Act
             List<ItemResponseDTO> responseList = itemService.buscarPorCategoria(item.getCategoria());
 
-            // Assert
             assertNotNull(responseList);
 
             validarDadosItem(item, responseList.getFirst());
@@ -306,16 +273,13 @@ public class ItemServiceTest {
 
         @Test
         void buscarItemPorStatus() {
-            // Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
             Item item = ItemFactory.criarItemPronto(proprietario);
 
             when(itemRepository.findByStatusItem(item.getStatusItem())).thenReturn(List.of(item));
 
-            // Act
             List<ItemResponseDTO> responseList = itemService.buscarItemPorStatus(item.getStatusItem());
 
-            // Assert
             assertNotNull(responseList);
 
             validarDadosItem(item, responseList.getFirst());
@@ -325,15 +289,12 @@ public class ItemServiceTest {
 
         @Test
         void excecaoQuandoNenhumRegistroEncontradoQuandoRealizadoPesquisaPorStatus() {
-            // Arrange
             StatusItem statusItem = StatusItem.VENDIDO;
 
             when(itemRepository.findByStatusItem(statusItem)).thenReturn(List.of());
 
-            // Act
             NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> itemService.buscarItemPorStatus(statusItem));
 
-            // Assert
             assertEquals("Nenhum registro de status encontrado", exception.getMessage());
 
             verify(itemRepository).findByStatusItem(statusItem);
@@ -345,16 +306,13 @@ public class ItemServiceTest {
 
         @Test
         void buscarItemPorProprietario() {
-            // Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
             Item item = ItemFactory.criarItemPronto(proprietario);
 
             when(itemRepository.findByProprietarioId(proprietario.getId())).thenReturn(List.of(item));
 
-            // Act
             List<ItemResponseDTO> responseList = itemService.buscarItemPorProprietario(proprietario.getId());
 
-            // Assert
             assertNotNull(responseList);
 
             validarDadosItem(item, responseList.getFirst());
@@ -364,15 +322,12 @@ public class ItemServiceTest {
 
         @Test
         void excecaoQuandoNenhumItemEncontradoPorProprietario() {
-            // Arrange
             Long proprietarioId = 1L;
 
             when(itemRepository.findByProprietarioId(proprietarioId)).thenReturn(List.of());
 
-            // Act
             NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> itemService.buscarItemPorProprietario(proprietarioId));
 
-            // Assert
             assertEquals("Nenhum registro de item de proprietário encontrado", exception.getMessage());
 
             verify(itemRepository).findByProprietarioId(proprietarioId);
@@ -384,16 +339,13 @@ public class ItemServiceTest {
 
         @Test
         void buscarPorNome() {
-            // Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
             Item item = ItemFactory.criarItemPronto(proprietario);
 
             when(itemRepository.findByNome(item.getNome())).thenReturn(List.of(item));
 
-            // Act
             List<ItemResponseDTO> responseList = itemService.buscarPorNome(item.getNome());
 
-            // Assert
             assertNotNull(responseList);
 
             validarDadosItem(item, responseList.getFirst());
@@ -403,15 +355,12 @@ public class ItemServiceTest {
 
         @Test
         void excecaoQuandoNenhumItemEncontradoPorNome() {
-            // Arrange
             String nome = "Bicicleta";
 
             when(itemRepository.findByNome(nome)).thenReturn(List.of());
 
-            // Act
             NenhumRegistroException exception = assertThrows(NenhumRegistroException.class, () -> itemService.buscarPorNome(nome));
 
-            // Assert
             assertEquals("Nenhum registro de categoria encontrado", exception.getMessage());
 
             verify(itemRepository).findByNome(nome);
@@ -424,16 +373,13 @@ public class ItemServiceTest {
 
         @Test
         void deletarItemPorId() {
-            //Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
             Item item = ItemFactory.criarItemPronto(proprietario);
 
             when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
 
-            //Act
             itemService.removerItem(item.getId());
 
-            //Assert
             verify(itemRepository).delete(item);
             verify(itemRepository).findById(item.getId());
             verify(leilaoRepository).existsByItemId(item.getId());
@@ -441,15 +387,12 @@ public class ItemServiceTest {
 
         @Test
         void lancarExcecaoQuandoNenhumItemEncontradoPorId() {
-            //Arrange
             Long idItem = 111L;
 
             when(itemRepository.findById(idItem)).thenReturn(Optional.empty());
 
-            //Act
             IdNaoEncontradoException exception = assertThrows(IdNaoEncontradoException.class, () -> itemService.removerItem(idItem));
 
-            //Assert
             assertEquals("Id de item não encontrado", exception.getMessage());
 
             verify(itemRepository).findById(idItem);
@@ -458,17 +401,14 @@ public class ItemServiceTest {
 
         @Test
         void lancarExcecaoQuandoItemPossuirLeilaoVinculado() {
-            //Arrange
             Usuario proprietario = UsuarioFactory.criarUsuarioPronto();
             Item item = ItemFactory.criarItemPronto(proprietario);
 
             when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
             when(leilaoRepository.existsByItemId(item.getId())).thenReturn(true);
 
-            //Act
             ItemVinculadoAoLeilaoException exception = assertThrows(ItemVinculadoAoLeilaoException.class, () -> itemService.removerItem(item.getId()));
 
-            //Assert
             assertEquals("Item vínculado ao leilão não pode ser excluído", exception.getMessage());
 
             verify(itemRepository).findById(item.getId());
@@ -484,10 +424,8 @@ public class ItemServiceTest {
 
             when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
 
-            //Act
             ItemVinculadoAoLeilaoException exception = assertThrows(ItemVinculadoAoLeilaoException.class, () -> itemService.removerItem(item.getId()));
 
-            //Assert
             assertEquals("Item vínculado ao leilão não pode ser excluído", exception.getMessage());
 
             verify(itemRepository).findById(item.getId());

@@ -46,13 +46,10 @@ public class UsuarioServiceTest {
 
         @Test
         void deveSalvarUsuario() {
-            //Arrange
             UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo", "bernardo@gmail.com", "499.215.310-00");
 
-            //Act
             UsuarioResponseDTO usuarioResponse = usuarioService.salvarUsuario(usuarioRequestDTO);
 
-            //Assert
             assertEquals("Bernardo", usuarioResponse.nome());
             assertEquals("bernardo@gmail.com", usuarioResponse.email());
             assertEquals("49921531000", usuarioResponse.cpf());
@@ -62,27 +59,21 @@ public class UsuarioServiceTest {
 
         @Test
         void lancarExcecaoQuandoEmailExistente() {
-            //Arrange
             UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo", "bernardo@gmail.com", "715.159.700-27");
 
             when(usuarioRepository.existsByEmail(usuarioRequestDTO.email())).thenReturn(true);
 
-            //Act
             assertThrows(EmailRepetidoException.class, () -> usuarioService.salvarUsuario(usuarioRequestDTO));
 
-            //Assert
             verify(usuarioRepository, never()).save(any(Usuario.class));
         }
 
         @Test
         void deveLancarExcecaoQuandoCpfExistente() {
-            //Arrange
             UsuarioRequestDTO usuarioRequestDTO = new UsuarioRequestDTO("Bernardo", "bernardo@gmail.com", "110.969.290-07");
 
-            //Act
             when(usuarioRepository.existsByCpf("11096929007")).thenReturn(true);
 
-            //Assert
             assertThrows(CpfRepetidoException.class, () -> usuarioService.salvarUsuario(usuarioRequestDTO));
 
             verify(usuarioRepository, never()).save(any(Usuario.class));
@@ -94,7 +85,6 @@ public class UsuarioServiceTest {
 
         @Test
         void atualizarUsuario() {
-            //Arrange
             Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
             UsuarioUpdateRequestDTO usuarioUpdtRequestDTO = new UsuarioUpdateRequestDTO("Bernardo", "bernardo@gmail.com");
@@ -102,10 +92,8 @@ public class UsuarioServiceTest {
             when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
             when(usuarioRepository.existsByEmailAndIdNot(usuarioUpdtRequestDTO.email(), usuario.getId())).thenReturn(false);
 
-            //Act
             UsuarioResponseDTO usuarioResponse = usuarioService.atualizarUsuario(usuario.getId(), usuarioUpdtRequestDTO);
 
-            //Assert
             assertEquals("Bernardo", usuarioResponse.nome());
             assertEquals("bernardo@gmail.com", usuarioResponse.email());
 
@@ -115,17 +103,14 @@ public class UsuarioServiceTest {
 
         @Test
         void lancarExcecaoQuandoEmailRepetido() {
-            //Arrange
             Usuario usuario = UsuarioFactory.criarUsuarioPronto();
             UsuarioUpdateRequestDTO usuarioUpdateRequestDTO = new UsuarioUpdateRequestDTO("Bernardo", "bernardo@gmail.com");
 
             when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
             when(usuarioRepository.existsByEmailAndIdNot(usuarioUpdateRequestDTO.email(), usuario.getId())).thenReturn(true);
 
-            //Act
             EmailRepetidoException emailRepetidoException = assertThrows(EmailRepetidoException.class, () -> usuarioService.atualizarUsuario(usuario.getId(), usuarioUpdateRequestDTO));
 
-            //Assert
             assertEquals("Email já cadastrado", emailRepetidoException.getMessage());
 
             verify(usuarioRepository, never()).save(any(Usuario.class));
@@ -138,15 +123,12 @@ public class UsuarioServiceTest {
 
         @Test
         void buscarUsuarioPorId() {
-            //Arrange
             Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
             when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
 
-            //Act
             UsuarioResponseDTO usuarioResponse = usuarioService.exibirPorId(usuario.getId());
 
-            //Assert
             verify(usuarioRepository, times(1)).findById(usuario.getId());
 
             validarDadosUsuario(usuario, usuarioResponse);
@@ -154,14 +136,11 @@ public class UsuarioServiceTest {
 
         @Test
         void deveLancarExcecaoQuandoIdUsuarioNaoEncontrado() {
-            //Arrange
             when(usuarioRepository.findById(1L)).thenReturn(Optional.empty());
 
-            //Act
             IdNaoEncontradoException idNaoEncontradoException = assertThrows(IdNaoEncontradoException.class, () -> usuarioService.exibirPorId(1L));
             assertEquals("Usuário não encontrado", idNaoEncontradoException.getMessage());
 
-            //Assert
             verify(usuarioRepository, times(1)).findById(1L);
         }
     }
@@ -171,17 +150,14 @@ public class UsuarioServiceTest {
 
         @Test
         void pesquisarTodosOsUsarios() {
-            //Arrange
             Usuario pedro = UsuarioFactory.criarUsuarioPersonalizado(1L, "pedro", "60687400058", StatusUsuario.ATIVO);
             Usuario carlos = UsuarioFactory.criarUsuarioPersonalizado(2L, "carlos", "18695885097", StatusUsuario.ATIVO);
 
             when(usuarioRepository.findAll()).thenReturn(List.of(pedro, carlos));
 
-            //Act
 
             List<UsuarioResponseDTO> usuarioResponse = usuarioService.exibirTodosUsuarios();
 
-            //Assert
             assertNotNull(usuarioResponse);
             assertEquals(2, usuarioResponse.size());
             assertEquals("pedro", usuarioResponse.get(0).nome());
@@ -192,13 +168,10 @@ public class UsuarioServiceTest {
 
         @Test
         void lancarExcecaoQuandoListaEstiverVazia() {
-            //Arrange
             when(usuarioRepository.findAll()).thenReturn(List.of());
 
-            //Act
             assertThrows(NenhumRegistroException.class, () -> usuarioService.exibirTodosUsuarios());
 
-            //Assert
             verify(usuarioRepository).findAll();
         }
     }
@@ -208,16 +181,13 @@ public class UsuarioServiceTest {
 
         @Test
         void buscarPorCPF() {
-            //Arrange
             String cpf = "06693512020";
             Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
             when(usuarioRepository.findByCpf(cpf)).thenReturn(usuario);
 
-            //Act
             UsuarioResponseDTO usuarioCpfResponse = usuarioService.exibirPorCpf(cpf);
 
-            //Assert
             assertNotNull(usuarioCpfResponse);
             assertEquals("06693512020", usuarioCpfResponse.cpf());
 
@@ -228,15 +198,12 @@ public class UsuarioServiceTest {
 
         @Test
         void deveLancarExcecaoQuandoCpfNaoEncontrado() {
-            // Arrange
             String cpf = "79451761004";
 
             when(usuarioRepository.findByCpf(cpf)).thenReturn(null);
 
-            // Act
             CpfNaoEncontradoException exception = assertThrows(CpfNaoEncontradoException.class, () -> usuarioService.exibirPorCpf(cpf));
 
-            // Assert
             assertEquals("Cpf não encontrado", exception.getMessage());
 
             verify(usuarioRepository).findByCpf("79451761004");
@@ -248,16 +215,13 @@ public class UsuarioServiceTest {
 
         @Test
         void realizarBuscarPorEmail() {
-            //Arrange
             String email = "bernardo89@gmail.com";
             Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
             when(usuarioRepository.findByEmail(email)).thenReturn(usuario);
 
-            //Act
             UsuarioResponseDTO usuarioResponse = usuarioService.exibirPorEmail(email);
 
-            //Assert
             validarDadosUsuario(usuario, usuarioResponse);
 
             verify(usuarioRepository).findByEmail(email);
@@ -265,15 +229,12 @@ public class UsuarioServiceTest {
 
         @Test
         void lancarExcecaoQuandoEmailNaoEncontrado() {
-            //Arrange
             String email = "bernardo@gmail.com";
 
             when(usuarioRepository.findByEmail(email)).thenReturn(null);
 
-            //Act
             EmailNaoEncontradoException exception = assertThrows(EmailNaoEncontradoException.class, () -> usuarioService.exibirPorEmail(email));
 
-            //Assert
             assertEquals("Email não encontrado", exception.getMessage());
 
             verify(usuarioRepository).findByEmail(email);
@@ -285,16 +246,13 @@ public class UsuarioServiceTest {
 
         @Test
         void buscarPorStatus() {
-            //Arrange
             StatusUsuario statusUsuario = StatusUsuario.ATIVO;
             Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
             when(usuarioRepository.findByStatusUsuario(statusUsuario)).thenReturn(List.of(usuario));
 
-            //Act
             List<UsuarioResponseDTO> usuarioResponseDTO = usuarioService.exibirPorStatus(statusUsuario);
 
-            //Assert
             assertNotNull(usuarioResponseDTO);
             assertEquals(1, usuarioResponseDTO.size());
 
@@ -321,15 +279,12 @@ public class UsuarioServiceTest {
 
         @Test
         void deveBloquearUsuarioAtivo() {
-            // Arrange
             Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
             when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
 
-            // Act
             UsuarioResponseDTO usuarioResponseDTO = usuarioService.bloquearUsuario(usuario.getId());
 
-            // Assert
             validarDadosUsuario(usuario, usuarioResponseDTO);
 
             assertEquals(StatusUsuario.BLOQUEADO, usuario.getStatusUsuario());
@@ -340,15 +295,12 @@ public class UsuarioServiceTest {
 
         @Test
         void lancarExcecaoQuandoUsuarioJaEstiverBloqueado() {
-            //Arrange
             Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo", "18968230099", StatusUsuario.BLOQUEADO);
 
             when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
 
-            //Act
             UsuarioBloqueadoException exception = assertThrows(UsuarioBloqueadoException.class, () -> usuarioService.bloquearUsuario(usuario.getId()));
 
-            //Assert
             assertEquals("Usuario já está bloqueado", exception.getMessage());
 
             verify(usuarioRepository).findById(usuario.getId());
@@ -361,15 +313,12 @@ public class UsuarioServiceTest {
         @Test
         void deveDesBloquearUsuarioBloqueado() {
 
-            //Arrange
             Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo", "18968230099", StatusUsuario.BLOQUEADO);
 
             when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
 
-            //Act
             UsuarioResponseDTO usuarioResponseDTO = usuarioService.desbloquearUsuario(usuario.getId());
 
-            //Assert
             validarDadosUsuario(usuario, usuarioResponseDTO);
 
             assertEquals(StatusUsuario.ATIVO, usuario.getStatusUsuario());
@@ -379,16 +328,13 @@ public class UsuarioServiceTest {
 
         @Test
         void lancarExcecaoCasoTenteDesbloquearUsuarioAtivo() {
-            //Arrange
             Usuario usuario = UsuarioFactory.criarUsuarioPersonalizado(1L, "Bernardo", "18968230099", StatusUsuario.ATIVO);
 
             when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
 
-            //Act
             UsuarioAtivoException exception = assertThrows(UsuarioAtivoException.class, () -> usuarioService.desbloquearUsuario(usuario.getId()));
             assertEquals("Usuário já está ativo", exception.getMessage());
 
-            //Assert
             verify(usuarioRepository).findById(usuario.getId());
         }
     }
@@ -412,16 +358,13 @@ public class UsuarioServiceTest {
 
         @Test
         void verificarSeUsuarioPossuiItemVinculado() {
-            //Arrange
             Usuario usuario = UsuarioFactory.criarUsuarioPronto();
 
             when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
             when(itemRepository.existsByProprietarioIdAndLeilaoIdIsNotNull(usuario.getId())).thenReturn(true);
 
-            //Act
             PossuiItemEmLeilaoException exception = assertThrows(PossuiItemEmLeilaoException.class, () -> usuarioService.removerUsuario(usuario.getId()));
 
-            //Assert
             assertEquals("Usuário possui item vinculados a leilão", exception.getMessage());
 
             verify(usuarioRepository).findById(usuario.getId());
@@ -431,16 +374,13 @@ public class UsuarioServiceTest {
 
         @Test
         void verificarSeUsuarioPossuiPossuiLeilaoAtivo() {
-            //Arrange
             Usuario criadorLeilao = UsuarioFactory.criarUsuarioPronto();
 
             when(usuarioRepository.findById(criadorLeilao.getId())).thenReturn(Optional.of(criadorLeilao));
             when(leilaoRepository.existsByCriadorIdAndStatusLeilaoIn(criadorLeilao.getId(), List.of(StatusLeilao.AGENDADO, StatusLeilao.ABERTO))).thenReturn(true);
 
-            //Act
             PossuiLeilaoAtivoException exception = assertThrows(PossuiLeilaoAtivoException.class, () -> usuarioService.removerUsuario(criadorLeilao.getId()));
 
-            //Assert
             assertEquals("Usuário possui leilão ativo", exception.getMessage());
 
             verify(usuarioRepository).findById(criadorLeilao.getId());
