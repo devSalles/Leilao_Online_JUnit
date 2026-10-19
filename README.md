@@ -36,16 +36,23 @@
 
 ---
 
-# 📖 Sobre o Projeto
+📖 Sobre o Projeto
 
-Este projeto foi desenvolvido com o objetivo de consolidar conhecimentos em **testes unitários** aplicados a uma API REST desenvolvida com **Java** e **Spring Boot**.
+API REST de leilões online desenvolvida com Java e Spring Boot, com gerenciamento de usuários, itens, leilões e lances.
 
-A aplicação simula um sistema de **leilão online**, envolvendo o gerenciamento de usuários, itens, leilões e lances, além da implementação de regras de negócio relacionadas ao fluxo dos leilões.
+O sistema possui regras de negócio para:
 
-O sistema possui regras para **agendamento, abertura, cancelamento e encerramento de leilões**, controle de usuários, validação de lances, definição automática do vencedor e transferência de propriedade do item quando o leilão é encerrado com um vencedor.
+Usuários e itens: controle de status, disponibilidade e restrições de exclusão.
 
-O principal objetivo foi validar essas regras por meio de testes unitários utilizando **JUnit 5**, **Mockito** e **JaCoCo**, garantindo maior confiabilidade e qualidade do código.
+Leilões: validação de datas, transições de status e regras de cancelamento e encerramento.
 
+Lances: validação de valores, impedimento de lances do proprietário e definição do maior lance.
+
+Encerramento: definição do vencedor, venda do item e transferência de propriedade.
+
+Os testes foram desenvolvidos com JUnit 5 e Mockito, utilizando @Nested, @ParameterizedTest e @MethodSource para organização e validação de diferentes cenários.
+
+O JaCoCo foi utilizado para analisar a cobertura dos testes e apoiar a avaliação da qualidade do código.
 ---
 
 # 🏗️ Arquitetura do Projeto
