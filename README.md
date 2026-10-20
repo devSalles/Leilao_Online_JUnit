@@ -31,6 +31,7 @@
 ![Mockito](https://img.shields.io/badge/Mockito-green)
 ![JaCoCo](https://img.shields.io/badge/JaCoCo-Code%20Coverage-yellow)
 ![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-brightgreen)
+![MySQL](https://img.shields.io/badge/MySQL-Database-blue)
 
 </div>
 
